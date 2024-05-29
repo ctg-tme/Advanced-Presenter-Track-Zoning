@@ -23,7 +23,7 @@ body, html {
 .container {
   position: relative;
   flex: 1;
-  padding: 100px; /* Adjusted padding */
+  padding: 50px; /* Adjusted padding */
   box-sizing: border-box;
   overflow: hidden;
   display: flex;
@@ -32,7 +32,7 @@ body, html {
 }
 
 canvas {
-  width: 60%;
+  width: 75%;
   /* height: 100%; */
   background-size: cover;
   border: 2px solid #000;
@@ -49,10 +49,10 @@ canvas {
 footer {
   display: flex;
   align-items: center; /* Vertical center alignment */
-  position: relative;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
   height: 50px;
-  clear: both;
-  margin-top: 20px;
   background-color: #0079d4;
   color: white;
 }
@@ -60,4 +60,28 @@ footer {
 footer img {
   margin-right: 10px; /* Adjust as needed */
   margin-left: 10px; /* Adjust as needed */
+}
+
+/* Create two unequal columns that floats next to each other */
+.column {
+  float: left;
+  padding: 10px;
+  height: 100%;
+}
+
+.left {
+  width: 65%;
+  box-sizing: border-box;
+}
+
+.right {
+  width: 35%;
+  box-sizing: border-box;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
 }

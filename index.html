@@ -10,6 +10,9 @@
 
 <header>
   <h1>Advanced Presenter Track Zoning</h1>
+  <p>Presenter Track is a feature available on select Cisco Video Endpoints, such as the Room Kit Pro or Room Kit EQ
+
+  </p>
 </header>
 
 <body>
@@ -36,14 +39,51 @@
     <br>
     <button id="copyCoordinates">Copy Coordinates</button>
   </div>
-  <div class="container">
-    <canvas id="canvas" width="1920" height="1080"></canvas>
+  <div class="row">
+    <div class="column left" style="background-color:#e2e2e2;">
+      <div class="container">
+        <canvas id="canvas" width="1920" height="1080"></canvas>
+      </div>
+    </div>
+    <div class="column right">
+      <h2>Key</h2>
+      The color may differ depending on your color settings above
+      <ul>
+        <li>🔺 - The Starting Coordinate Dot</li>
+        <li>🔴 - Intermediate Coordinate Dot</li>
+        <li>🟥 - Ending Coordinate Dot</li>
+      </ul>
+      <h2>Instructions</h2>
+      <p>Before starting, it's recommended you first position your camera for Presentertrack following its <a href="https://help.webex.com/en-us/article/9ur0g6/Set-up-PresenterTrack-for-Board-and-Room-Series">normal configuration process</a> and save</p>
+      <ol>
+        <li>Get a screenshot of your PTZ Camera View<ul>
+            <li>Have this system join a Meeting Bridge and grab a Screen Shot of the Camera Image</li>
+            <li>If you have Remote Monitoring Installed, go to the Web UI and copy the image from that interface</li>
+          </ul>
+        </li>
+        <li>Upload the Screenshot to this Canvas</li>
+        <li>Place your first Coordinate Dot on the Canvas<ul>
+            <li>Left Clicking places a dot</li>
+            <li>Right Clicking deletes a dot</li>
+          </ul>
+        </li>
+        <li>Build out your custom Zone</li>
+        <ul>
+          <li>You don't need to close the shape</li>
+          <li>The First and Last Dot will Auto Close the shape for you</li>
+          <li>Try to avoid intersecting lines</li>
+        </ul>
+        <li>When complete, select the Copy Coordinates button</li>
+        <li>Save these coordinates under <a href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/">xConfiguration Cameras PresenterTrack TriggerZone</a></li>
+      </ol>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>
 
 <footer>
-  <img src="https://avatars.githubusercontent.com/u/159071680?s=200&v=4" width="50px"> CTG - Technical Marketing Engineering || <a href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning" target="_blank">View on Github</a>
+  <img src="https://avatars.githubusercontent.com/u/159071680?s=200&v=4" width="50px"> CTG - Technical Marketing
+  Engineering || <a href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning" target="_blank">View on Github</a>
 </footer>
 
 </html>
