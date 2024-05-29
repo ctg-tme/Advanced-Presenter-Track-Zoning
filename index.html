@@ -4,22 +4,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canvas with Grid</title>
+  <title>Advanced Presenter Track Zoning</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
+<header>
+  <h1>Advanced Presenter Track Zoning</h1>
+</header>
+
 <body>
   <div class="toolbar">
-    <input type="file" id="uploadImage" accept="image/*">
-    <label for="lineColor">Line Color:</label>
-    <input type="color" id="lineColor" value="#00b3ff">
-    <label for="dotColor">Dot Color:</label>
-    <input type="color" id="dotColor" value="#d4ff00">
-    <label for="lineThickness">Line Thickness:</label>
-    <input type="number" id="lineThickness" value="2" min="1" max="10">
+    <div class="toolElement">
+      <label for="file">Upload Image </label>
+      <input type="file" id="uploadImage" accept="image/*">
+    </div>
+    <div class="toolElement">
+      <label for="lineColor">Line Color:</label>
+      <input type="color" id="lineColor" value="#FF0000">
+    </div>
+    <div class="toolElement">
+      <label for="dotColor">Dot Color: </label>
+      <input type="color" id="dotColor" value="#d4ff00">
+    </div>
+    <div class="toolElement">
+      <label for="lineThickness">Line Thickness: </label>
+      <input type="number" id="lineThickness" value="4" min="1" max="10">
+    </div>
   </div>
   <div class="coordinateContainer">
     <div id="coordinates">Coordinates: [Plot your first dot!]</div>
+    <br>
     <button id="copyCoordinates">Copy Coordinates</button>
   </div>
   <div class="container">
@@ -27,5 +41,9 @@
   </div>
   <script src="script.js"></script>
 </body>
+
+<footer>
+  <img src="https://avatars.githubusercontent.com/u/159071680?s=200&v=4" width="50px"> CTG - Technical Marketing Engineering || <a href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning" target="_blank">View on Github</a>
+</footer>
 
 </html>
