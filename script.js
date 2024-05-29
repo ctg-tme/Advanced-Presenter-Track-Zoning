@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const lineThicknessInput = document.getElementById("lineThickness");
   const copyCoordinatesButton = document.getElementById("copyCoordinates");
   const dotRadius = 5;
+  const triangleSize = dotRadius * 2
+  const squareSize = dotRadius * 1.5
   let dots = [];
   let connectDots = false;
   let image = new Image();
@@ -52,12 +54,35 @@ document.addEventListener("DOMContentLoaded", function () {
     ctx.setLineDash([5, 5]); // Set line dash pattern (5px dash, 5px gap)
     dots.forEach((dot, index) => {
       ctx.beginPath();
-      ctx.fillStyle = dotColor;
-      ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
-      ctx.fill();
       if (index > 0) {
         ctx.moveTo(dots[index - 1].x, dots[index - 1].y);
         ctx.lineTo(dot.x, dot.y);
+      }
+      if (dots.length > 2 && index == dots.length - 1) {
+        ctx.lineTo(dots[0].x, dots[0].y)
+      }
+      ctx.stroke();
+
+    })
+    dots.forEach((dot, index) => {
+      ctx.beginPath();
+      if (index === 0) {
+        // Draw triangle for the first dot
+        ctx.fillStyle = dotColor;
+        ctx.moveTo(dot.x, dot.y - triangleSize);
+        ctx.lineTo(dot.x - triangleSize, dot.y + triangleSize);
+        ctx.lineTo(dot.x + triangleSize, dot.y + triangleSize);
+        ctx.closePath();
+        ctx.fill();
+      } else if (index === dots.length - 1) {
+        // Draw square for the last dot
+        ctx.fillStyle = dotColor;
+        ctx.fillRect(dot.x - squareSize, dot.y - squareSize, squareSize * 2, squareSize * 2);
+      } else {
+        // Draw circle for other dots
+        ctx.fillStyle = dotColor;
+        ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.stroke();
     });
@@ -149,6 +174,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Copy coordinates to clipboard
   copyCoordinatesButton.addEventListener("click", function () {
     const coordinatesString = coordinatesDiv.textContent.replace('Coordinates: ', '');
+    console.log('coordinatesString', coordinatesString)
     navigator.clipboard.writeText(coordinatesString).then(() => {
       alert(`Coordinates copied to clipboard!\n${coordinatesString}`);
     }).catch(err => {

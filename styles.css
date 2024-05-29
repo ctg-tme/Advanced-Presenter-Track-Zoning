@@ -27,14 +27,14 @@ body, html {
 }
 
 canvas {
-  width: 100%;
-  height: 100%;
+  width: 75%;
+  /* height: 100%; */
   background-size: cover;
   border: 2px solid #000;
 }
 
-.coordinates {
-  position: absolute;
+.coordinateContainer {
+  /* position: absolute; */
   top: 50px;
   left: 20px;
   background-color: rgba(255, 255, 255, 0.8);
