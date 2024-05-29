@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas with Grid</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="toolbar">
+    <input type="file" id="uploadImage" accept="image/*">
+    <label for="lineColor">Line Color:</label>
+    <input type="color" id="lineColor" value="#00b3ff">
+    <label for="dotColor">Dot Color:</label>
+    <input type="color" id="dotColor" value="#d4ff00">
+    <label for="lineThickness">Line Thickness:</label>
+    <input type="number" id="lineThickness" value="2" min="1" max="10">
+</div>
+  <div class="coordinates">
+    <div id="coordinates">Coordinates: [Plot your first dot!]</div>
+    <button id="copyCoordinates">Copy Coordinates</button>
+  </div>
+  <div class="container">
+    <canvas id="canvas" width="1920" height="1080"></canvas>
+  </div>
+  <script src="script.js"></script>
+</body>
+
+</html>
