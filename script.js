@@ -7,9 +7,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const dotColorInput = document.getElementById("dotColor");
   const lineThicknessInput = document.getElementById("lineThickness");
   const copyCoordinatesButton = document.getElementById("copyCoordinates");
-  const dotRadius = 5;
-  const triangleSize = dotRadius * 2
-  const squareSize = dotRadius * 1.5
+  const dotRadius = 8;
+  const triangleSize = dotRadius * 1.5
+  const squareSize = dotRadius * 1.25
   let dots = [];
   let connectDots = false;
   let image = new Image();
@@ -18,6 +18,22 @@ document.addEventListener("DOMContentLoaded", function () {
   let dotColor = dotColorInput.value;
   let lineThickness = parseInt(lineThicknessInput.value, 10);
   let imageLoaded = false; // Flag to track if image has been loaded
+
+  function setShadow() {
+    // Set shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 1)'; // Shadow color
+    ctx.shadowBlur = 10; // Blur level
+    ctx.shadowOffsetX = 5; // Horizontal offset
+    ctx.shadowOffsetY = 5; // Vertical offset
+  }
+
+  function clearShadow() {
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
 
   // Load initial background image
   image.onload = function () {
@@ -138,26 +154,28 @@ document.addEventListener("DOMContentLoaded", function () {
     //  Draw Dots
     dots.forEach((dot, index) => {
       ctx.beginPath();
+      setShadow();
+      ctx.fillStyle = dotColor;
       if (index === 0) {
         // Draw triangle for the first dot
-        ctx.fillStyle = dotColor;
         ctx.moveTo(dot.x, dot.y - triangleSize);
         ctx.lineTo(dot.x - triangleSize, dot.y + triangleSize);
         ctx.lineTo(dot.x + triangleSize, dot.y + triangleSize);
-        ctx.closePath();
+        ctx.closePath(); // Close the path
         ctx.fill();
       } else if (index === dots.length - 1) {
         // Draw square for the last dot
-        ctx.fillStyle = dotColor;
         ctx.fillRect(dot.x - squareSize, dot.y - squareSize, squareSize * 2, squareSize * 2);
       } else {
         // Draw circle for other dots
-        ctx.fillStyle = dotColor;
         ctx.arc(dot.x, dot.y, dotRadius, 0, Math.PI * 2);
+        ctx.closePath(); // Close the path
         ctx.fill();
       }
-      ctx.stroke();
+      clearShadow();
     });
+
+
     ctx.setLineDash([]); // Reset line dash pattern to solid line
   }
 
