@@ -3,12 +3,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const ctx = canvas.getContext("2d");
   const coordinatesDiv = document.getElementById("coordinates");
   const uploadImage = document.getElementById("uploadImage");
-  const pushCorrdinates = document.getElementById("pushCorrdinates");
+  const pushCoordinates = document.getElementById("pushCoordinates");
   const lineColorInput = document.getElementById("lineColor");
   const dotColorInput = document.getElementById("dotColor");
   const lineThicknessInput = document.getElementById("lineThickness");
   const copyCoordinatesButton = document.getElementById("copyCoordinates");
-  const clearCorrdinatesButton = document.getElementById("clearCorrdinates");
+  const clearCoordinatesButton = document.getElementById("clearCoordinates");
   const dragOverModel = document.getElementById("dragOverModel");
   const dropZone = document.querySelector("body");
 
@@ -388,9 +388,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Clear coordinates from inputs field and canvas
-  clearCorrdinatesButton.addEventListener("click", function () {
+  clearCoordinatesButton.addEventListener("click", function () {
     const text =
-      "Are you sure you want to clear corrdinates?\nClick OK confirm or Cancel.";
+      "Are you sure you want to clear coordinates?\nClick OK confirm or Cancel.";
     if (confirm(text) == true) {
       newLine = true;
       dots = [];
@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Push coordinates from input field to canvas
-  pushCorrdinates.addEventListener("click", function () {
+  pushCoordinates.addEventListener("click", function () {
     const values = coordinatesDiv.value
       .replaceAll(" ", "")
       .split(",")
@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
     newLine = false;
     console.log(dots);
     draw();
-    alert("Corrdinates Pushed\n" + values.join(","));
+    alert("Coordinates Pushed\n" + values.join(","));
   });
 
   //showModal();
