@@ -6,18 +6,29 @@ document.addEventListener("DOMContentLoaded", function () {
   const uploadImage = document.getElementById("uploadImage");
   const uploadFileName = document.getElementById("uploadFileName");
   const clearImageButton = document.getElementById("clearImage");
-  const zoneThemeSelect = document.getElementById("zoneTheme");
+  const zoneThemeButton = document.getElementById("zoneThemeButton");
+  const zoneThemeName = document.getElementById("zoneThemeName");
+  const themePickerModal = document.getElementById("themePickerModal");
+  const themeOptionButtons = document.querySelectorAll(".theme-option");
   const lineThicknessInput = document.getElementById("lineThickness");
+  const dimImageInput = document.getElementById("dimImage");
   const gridSpacingInput = document.getElementById("gridSpacing");
   const snapToGridInput = document.getElementById("snapToGrid");
-  const simpleShapeSelect = document.getElementById("simpleShape");
+  const addShapeButton = document.getElementById("addShape");
+  const shapePickerModal = document.getElementById("shapePickerModal");
+  const shapeOptionButtons = document.querySelectorAll(".shape-option");
   const copyCoordinatesButton = document.getElementById("copyCoordinates");
   const undoCoordinateButton = document.getElementById("undoCoordinate");
+  const redoCoordinateButton = document.getElementById("redoCoordinate");
   const clearCoordinatesButton = document.getElementById("clearCoordinates");
   const dragOverModal = document.getElementById("dragOverModel");
   const statusMessage = document.getElementById("statusMessage");
   const themeToggle = document.getElementById("themeToggle");
   const themeToggleText = document.getElementById("themeToggleText");
+  const helpGuideButton = document.getElementById("helpGuideButton");
+  const helpGuideModal = document.getElementById("helpGuideModal");
+  const dismissHelpButton = document.getElementById("dismissHelp");
+  const dismissHelpForeverButton = document.getElementById("dismissHelpForever");
   const year = document.getElementById("year");
 
   const dotRadius = 8;
@@ -28,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const minimumShapeSize = 24;
   const coordinatesHashParam = "dptCoordinates";
   const unsetCoordinatesValue = "notSet";
+  const helpDismissedKey = "aptzb-help-dismissed";
   const legacyCoordinateHashParams = ["coordinates", "coords"];
   const retiredHashParams = [
     "dptImage",
@@ -39,8 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const storedImageKey = "aptzb-custom-image";
   const zoneThemes = {
     eveningFjord: {
-      dot: "#ff8a7a",
-      line: "#67d8ff",
+      dot: "#b96f73",
+      line: "#8aa0ff",
     },
     poppyBreeze: {
       dot: "#ff9a76",
@@ -76,20 +88,25 @@ document.addEventListener("DOMContentLoaded", function () {
     rectangle: "Rectangle",
     rhombus: "Rhombus",
     trapezoid: "Trapezoid",
+    parallelogram: "Parallelogram",
+    pentagon: "Pentagon",
+    lShape: "L Shape",
     hexagon: "Hexagon",
     octagon: "Octagon",
   };
 
   let dots = [];
   let image = new Image();
-  let currentZoneTheme = zoneThemes[zoneThemeSelect.value] || zoneThemes.eveningFjord;
+  let currentZoneThemeName = "eveningFjord";
+  let currentZoneTheme = zoneThemes[currentZoneThemeName];
   let lineColor = currentZoneTheme.line;
   let previewLineColor = lineColor;
   let dotColor = currentZoneTheme.dot;
   let lineThickness = parseInt(lineThicknessInput.value, 10);
+  let dimImage = dimImageInput.checked;
   let gridSpacing = parseInt(gridSpacingInput.value, 10);
   let snapToGrid = snapToGridInput.checked;
-  let selectedShape = simpleShapeSelect.value;
+  let selectedShape = manualShapeValue;
   let imageLoaded = false;
   let imageIsSample = true;
   let newLine = true;
@@ -97,6 +114,8 @@ document.addEventListener("DOMContentLoaded", function () {
   let dragState = null;
   let shapeDragState = null;
   let suppressNextClick = false;
+  let undoStack = [];
+  let redoStack = [];
 
   function getUrlHashParams() {
     return new URLSearchParams(window.location.hash.slice(1));
@@ -114,16 +133,27 @@ document.addEventListener("DOMContentLoaded", function () {
     retiredHashParams.forEach((param) => params.delete(param));
   }
 
+  function getThemeLabel(themeName) {
+    const themeButton = Array.from(themeOptionButtons).find(
+      (button) => button.dataset.theme === themeName
+    );
+    return themeButton ? themeButton.textContent.trim() : "Evening Fjord";
+  }
+
   function applyZoneTheme(themeName, options = {}) {
-    currentZoneTheme = zoneThemes[themeName] || zoneThemes.eveningFjord;
+    currentZoneThemeName = zoneThemes[themeName] ? themeName : "eveningFjord";
+    currentZoneTheme = zoneThemes[currentZoneThemeName];
     lineColor = currentZoneTheme.line;
     previewLineColor = lineColor;
     dotColor = currentZoneTheme.dot;
-    zoneThemeSelect.value = Object.keys(zoneThemes).includes(themeName)
-      ? themeName
-      : "eveningFjord";
+    zoneThemeName.textContent = getThemeLabel(currentZoneThemeName);
     document.body.style.setProperty("--zone-theme-line", lineColor);
     document.body.style.setProperty("--zone-theme-dot", dotColor);
+    themeOptionButtons.forEach((button) => {
+      const isSelected = button.dataset.theme === currentZoneThemeName;
+      button.classList.toggle("is-selected", isSelected);
+      button.setAttribute("aria-pressed", String(isSelected));
+    });
 
     if (!options.silent) {
       draw();
@@ -149,6 +179,22 @@ document.addEventListener("DOMContentLoaded", function () {
     draw();
   }
 
+  function openModal(modal) {
+    modal.classList.add("is-active");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeModal(modal) {
+    modal.classList.remove("is-active");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  function closePickerModals() {
+    closeModal(themePickerModal);
+    closeModal(shapePickerModal);
+    closeModal(helpGuideModal);
+  }
+
   let savedTheme = null;
   try {
     savedTheme = localStorage.getItem("aptzb-theme");
@@ -160,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
     savedTheme ||
     (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 
-  applyZoneTheme(zoneThemeSelect.value, { silent: true });
+  applyZoneTheme(currentZoneThemeName, { silent: true });
   applyTheme(preferredTheme);
 
   if (year) {
@@ -168,8 +214,91 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function setStatus(message, type = "info") {
-    statusMessage.textContent = message;
+    statusMessage.textContent = `Status: ${message}`;
     statusMessage.className = `help status-message is-${type}`;
+  }
+
+  function clonePoints(points) {
+    return points.map((point) => ({ x: point.x, y: point.y }));
+  }
+
+  function cloneZoneState(state) {
+    return {
+      dots: clonePoints(state.dots),
+      newLine: state.newLine,
+    };
+  }
+
+  function getZoneState() {
+    return {
+      dots: clonePoints(dots),
+      newLine,
+    };
+  }
+
+  function statesEqual(firstState, secondState) {
+    if (!firstState || !secondState) return false;
+    if (firstState.newLine !== secondState.newLine) return false;
+    if (firstState.dots.length !== secondState.dots.length) return false;
+
+    return firstState.dots.every((point, index) => {
+      const otherPoint = secondState.dots[index];
+      return point.x === otherPoint.x && point.y === otherPoint.y;
+    });
+  }
+
+  function saveUndoState(state) {
+    const normalizedState = cloneZoneState(state);
+    const lastState = undoStack[undoStack.length - 1];
+    if (lastState && statesEqual(lastState, normalizedState)) return;
+
+    undoStack.push(normalizedState);
+    if (undoStack.length > 100) {
+      undoStack.shift();
+    }
+    redoStack = [];
+  }
+
+  function recordHistoryFromState(previousState) {
+    if (statesEqual(previousState, getZoneState())) return;
+    saveUndoState(previousState);
+  }
+
+  function commitUndoState() {
+    saveUndoState(getZoneState());
+  }
+
+  function restoreZoneState(state) {
+    dots = clonePoints(state.dots);
+    newLine = state.newLine;
+    printCoordinates();
+    draw();
+  }
+
+  function undoLastAction() {
+    if (undoStack.length === 0) {
+      setStatus("There is nothing to undo.", "info");
+      return;
+    }
+
+    const currentState = getZoneState();
+    const previousState = undoStack.pop();
+    redoStack.push(currentState);
+    restoreZoneState(previousState);
+    setStatus("Last action undone.", "success");
+  }
+
+  function redoLastAction() {
+    if (redoStack.length === 0) {
+      setStatus("There is nothing to redo.", "info");
+      return;
+    }
+
+    const currentState = getZoneState();
+    const nextState = redoStack.pop();
+    undoStack.push(currentState);
+    restoreZoneState(nextState);
+    setStatus("Action redone.", "success");
   }
 
   function setShadow() {
@@ -205,6 +334,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return document.body.dataset.theme === "dark"
       ? {
           empty: "#0e1013",
+          dimOverlay: "rgba(0, 0, 0, 0.46)",
           sampleOverlay: "rgba(14, 16, 19, 0.46)",
           sampleText: "rgba(255, 255, 255, 0.95)",
           sampleSubtext: "rgba(255, 255, 255, 0.72)",
@@ -214,6 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       : {
           empty: "#f8fdff",
+          dimOverlay: "rgba(0, 0, 0, 0.38)",
           sampleOverlay: "rgba(248, 253, 255, 0.66)",
           sampleText: "rgba(0, 0, 0, 0.88)",
           sampleSubtext: "rgba(0, 0, 0, 0.62)",
@@ -264,6 +395,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (imageIsSample) {
         ctx.fillStyle = theme.sampleOverlay;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (dimImage) {
+        ctx.fillStyle = theme.dimOverlay;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
@@ -633,12 +767,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function applyCoordinateEntry(value, options = {}) {
+    const previousState = getZoneState();
     const parsed = parseCoordinateEntry(value);
     const highlightIssue = parsed.error || parsed.issue;
 
     renderCoordinateHighlights(value, highlightIssue);
     dots = parsed.points;
     newLine = dots.length < 3;
+    if (options.recordHistory) {
+      recordHistoryFromState(previousState);
+    }
     draw();
     updateCoordinatesHash(dots);
 
@@ -760,6 +898,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function createShapePoints(shapeName, startPoint, endPoint) {
+    const dx = endPoint.x - startPoint.x;
+    const dy = endPoint.y - startPoint.y;
+    const dragWidth = Math.abs(dx);
+    const dragHeight = Math.abs(dy);
     const minX = Math.min(startPoint.x, endPoint.x);
     const maxX = Math.max(startPoint.x, endPoint.x);
     const minY = Math.min(startPoint.y, endPoint.y);
@@ -767,7 +909,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const width = maxX - minX;
     const height = maxY - minY;
 
-    if (width < minimumShapeSize || height < minimumShapeSize) {
+    if (dragWidth < minimumShapeSize || dragHeight < minimumShapeSize) {
       return [];
     }
 
@@ -775,6 +917,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const midY = minY + height / 2;
     const quarterX = width * 0.25;
     const octagonInset = Math.min(width, height) * 0.28;
+    const fromAnchor = (xRatio, yRatio) => [
+      startPoint.x + dx * xRatio,
+      startPoint.y + dy * yRatio,
+    ];
     const shapePoints = {
       triangle: [
         [midX, minY],
@@ -794,10 +940,31 @@ document.addEventListener("DOMContentLoaded", function () {
         [minX, midY],
       ],
       trapezoid: [
-        [minX + quarterX, minY],
-        [maxX - quarterX, minY],
-        [maxX, maxY],
-        [minX, maxY],
+        fromAnchor(0.2, 0),
+        fromAnchor(0.8, 0),
+        fromAnchor(1, 1),
+        fromAnchor(0, 1),
+      ],
+      parallelogram: [
+        fromAnchor(0, 0),
+        fromAnchor(0.78, 0),
+        fromAnchor(1, 1),
+        fromAnchor(0.22, 1),
+      ],
+      pentagon: [
+        [midX, minY],
+        [maxX, minY + height * 0.38],
+        [maxX - width * 0.18, maxY],
+        [minX + width * 0.18, maxY],
+        [minX, minY + height * 0.38],
+      ],
+      lShape: [
+        fromAnchor(0, 0),
+        fromAnchor(1, 0),
+        fromAnchor(1, 0.38),
+        fromAnchor(0.38, 0.38),
+        fromAnchor(0.38, 1),
+        fromAnchor(0, 1),
       ],
       hexagon: [
         [minX + quarterX, minY],
@@ -826,6 +993,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getShapeLabel(shapeName) {
     return simpleShapeLabels[shapeName] || "Shape";
+  }
+
+  function setShapeTool(shapeName) {
+    selectedShape = simpleShapeLabels[shapeName] ? shapeName : manualShapeValue;
+    shapeOptionButtons.forEach((button) => {
+      const isSelected = button.dataset.shape === selectedShape;
+      button.classList.toggle("is-selected", isSelected);
+      button.setAttribute("aria-pressed", String(isSelected));
+    });
   }
 
   function validatePointMove(points) {
@@ -1083,9 +1259,11 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    commitUndoState();
     dots = shapePoints;
     newLine = false;
     shapeDragState = null;
+    setShapeTool(manualShapeValue);
     printCoordinates();
     draw();
     setStatus(`${shapeLabel} placed. Drag points to refine the zone.`, "success");
@@ -1098,6 +1276,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     canvas.classList.remove("is-drawing-shape");
     shapeDragState = null;
+    setShapeTool(manualShapeValue);
     suppressNextClick = true;
     draw();
     setStatus("Shape placement cancelled.", "info");
@@ -1116,7 +1295,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const point = getPlacementPoint(event);
 
     if (!newLine) {
-      setStatus("Zone is complete. Use Undo Last Point or Clear Coordinates to edit.", "info");
+      setStatus("Zone is complete. Use Undo, Redo, or Clear to edit.", "info");
       return;
     }
 
@@ -1127,6 +1306,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      commitUndoState();
       newLine = false;
       draw(point);
       printCoordinates();
@@ -1134,10 +1314,9 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    dots.push(point);
-    const intersection = findLineIntersection(dots, false);
+    const candidateDots = [...dots, point];
+    const intersection = findLineIntersection(candidateDots, false);
     if (intersection) {
-      dots.pop();
       draw();
       printCoordinates();
       setStatus(
@@ -1147,6 +1326,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    commitUndoState();
+    dots = candidateDots;
     draw();
     printCoordinates();
     handlePointCountStatus();
@@ -1159,6 +1340,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const point = getCanvasPoint(event);
 
     if (!newLine && isNearStart(point)) {
+      commitUndoState();
       newLine = true;
       draw();
       setStatus("Zone reopened. You can add or remove points.", "info");
@@ -1166,11 +1348,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const previousLength = dots.length;
-    dots = dots.filter(
+    const candidateDots = dots.filter(
       (dot) => Math.sqrt((dot.x - point.x) ** 2 + (dot.y - point.y) ** 2) > dotRadius + 5
     );
 
-    if (dots.length !== previousLength) {
+    if (candidateDots.length !== previousLength) {
+      commitUndoState();
+      dots = candidateDots;
       newLine = true;
       draw();
       printCoordinates();
@@ -1192,6 +1376,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     dragState = {
       dotIndex,
+      historyState: getZoneState(),
       moved: false,
       originalPoint: { ...dots[dotIndex] },
       startClientPoint: {
@@ -1258,6 +1443,7 @@ document.addEventListener("DOMContentLoaded", function () {
       dragState.moved || dragState.dotIndex !== 0 || !newLine;
 
     if (dragState.moved) {
+      recordHistoryFromState(dragState.historyState);
       handlePointCountStatus();
     }
 
@@ -1404,6 +1590,75 @@ document.addEventListener("DOMContentLoaded", function () {
     reader.readAsDataURL(file);
   }
 
+  function copyCoordinatesToClipboard() {
+    const validation = validateZone(dots);
+    if (!validation.valid) {
+      setStatus(validation.message, "danger");
+      return;
+    }
+
+    const coordinatesString = formatCoordinates(dots, true);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(coordinatesString)
+        .then(() => {
+          setStatus("Coordinates copied to clipboard.", "success");
+        })
+        .catch(() => {
+          coordinatesInput.focus();
+          coordinatesInput.select();
+          setStatus(
+            "Clipboard copy failed. The coordinates field is selected.",
+            "warning"
+          );
+        });
+      return;
+    }
+
+    coordinatesInput.focus();
+    coordinatesInput.select();
+    setStatus("Clipboard access is unavailable. The coordinates field is selected.", "warning");
+  }
+
+  function pasteCoordinatesFromText(text) {
+    const nextValue = text.trim();
+    if (!nextValue) return;
+
+    coordinatesInput.value = nextValue;
+    coordinatesInput.focus();
+    applyCoordinateEntry(nextValue, { recordHistory: true });
+  }
+
+  function openHelpGuide() {
+    openModal(helpGuideModal);
+  }
+
+  function closeHelpGuide() {
+    closeModal(helpGuideModal);
+  }
+
+  function dismissHelpGuideForever() {
+    try {
+      localStorage.setItem(helpDismissedKey, "true");
+    } catch (error) {
+      // Help dismissal persistence is optional.
+    }
+    closeHelpGuide();
+  }
+
+  function showHelpGuideIfNeeded() {
+    let helpDismissed = false;
+    try {
+      helpDismissed = localStorage.getItem(helpDismissedKey) === "true";
+    } catch (error) {
+      helpDismissed = false;
+    }
+
+    if (!helpDismissed) {
+      openHelpGuide();
+    }
+  }
+
   loadInitialImage();
   loadCoordinatesFromHash();
 
@@ -1414,7 +1669,7 @@ document.addEventListener("DOMContentLoaded", function () {
   clearImageButton.addEventListener("click", clearUploadedImage);
 
   coordinatesInput.addEventListener("input", function (event) {
-    applyCoordinateEntry(event.target.value);
+    applyCoordinateEntry(event.target.value, { recordHistory: true });
   });
 
   coordinatesInput.addEventListener("scroll", syncCoordinateHighlightScroll);
@@ -1437,8 +1692,71 @@ document.addEventListener("DOMContentLoaded", function () {
     applyCoordinateEntry(hashCoordinates);
   });
 
-  zoneThemeSelect.addEventListener("change", function (event) {
-    applyZoneTheme(event.target.value);
+  zoneThemeButton.addEventListener("click", function () {
+    openModal(themePickerModal);
+  });
+
+  themeOptionButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      applyZoneTheme(button.dataset.theme);
+      closeModal(themePickerModal);
+    });
+  });
+
+  addShapeButton.addEventListener("click", function () {
+    openModal(shapePickerModal);
+  });
+
+  shapeOptionButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      setShapeTool(button.dataset.shape);
+      closeModal(shapePickerModal);
+      setStatus(
+        `${getShapeLabel(selectedShape)} tool selected. Drag on the editor to place it.`,
+        "info"
+      );
+      draw();
+    });
+  });
+
+  document.querySelectorAll("[data-close-modal], .picker-modal .modal-close").forEach(
+    (closeButton) => {
+      closeButton.addEventListener("click", closePickerModals);
+    }
+  );
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closePickerModals();
+    }
+
+    if (!(event.metaKey || event.ctrlKey) || event.defaultPrevented) return;
+
+    const key = event.key.toLowerCase();
+    if (key === "z" && !event.shiftKey) {
+      event.preventDefault();
+      undoLastAction();
+      return;
+    }
+
+    if ((key === "z" && event.shiftKey) || key === "y") {
+      event.preventDefault();
+      redoLastAction();
+      return;
+    }
+
+    if (key === "c") {
+      event.preventDefault();
+      copyCoordinatesToClipboard();
+    }
+  });
+
+  document.addEventListener("paste", function (event) {
+    const text = event.clipboardData && event.clipboardData.getData("text/plain");
+    if (!text) return;
+
+    event.preventDefault();
+    pasteCoordinatesFromText(text);
   });
 
   gridSpacingInput.addEventListener("change", function (event) {
@@ -1446,25 +1764,16 @@ document.addEventListener("DOMContentLoaded", function () {
     draw();
   });
 
+  dimImageInput.addEventListener("change", function (event) {
+    dimImage = event.target.checked;
+    draw();
+    setStatus(dimImage ? "Image dimming enabled." : "Image dimming disabled.", "info");
+  });
+
   snapToGridInput.addEventListener("change", function (event) {
     snapToGrid = event.target.checked;
     draw();
     setStatus(snapToGrid ? "Snap to grid enabled." : "Snap to grid disabled.", "info");
-  });
-
-  simpleShapeSelect.addEventListener("change", function (event) {
-    selectedShape = event.target.value;
-    if (selectedShape === manualShapeValue) {
-      setStatus("Manual point placement enabled.", "info");
-      draw();
-      return;
-    }
-
-    setStatus(
-      `${getShapeLabel(selectedShape)} tool selected. Drag on the editor to place it.`,
-      "info"
-    );
-    draw();
   });
 
   lineThicknessInput.addEventListener("input", function (event) {
@@ -1476,43 +1785,21 @@ document.addEventListener("DOMContentLoaded", function () {
     applyTheme(document.body.dataset.theme === "dark" ? "light" : "dark");
   });
 
-  copyCoordinatesButton.addEventListener("click", function () {
-    const validation = validateZone(dots);
-    if (!validation.valid) {
-      setStatus(validation.message, "danger");
-      return;
-    }
+  helpGuideButton.addEventListener("click", openHelpGuide);
+  dismissHelpButton.addEventListener("click", closeHelpGuide);
+  dismissHelpForeverButton.addEventListener("click", dismissHelpGuideForever);
 
-    const coordinatesString = formatCoordinates(dots, true);
-    navigator.clipboard
-      .writeText(coordinatesString)
-      .then(() => {
-        setStatus("Coordinates copied to clipboard.", "success");
-      })
-      .catch(() => {
-        coordinatesInput.focus();
-        coordinatesInput.select();
-        setStatus("Clipboard copy failed. The coordinates field is selected.", "warning");
-      });
-  });
-
-  undoCoordinateButton.addEventListener("click", function () {
-    if (dots.length === 0) {
-      setStatus("There are no points to undo.", "info");
-      return;
-    }
-
-    dots.pop();
-    newLine = true;
-    draw();
-    printCoordinates();
-    handlePointCountStatus();
-  });
+  copyCoordinatesButton.addEventListener("click", copyCoordinatesToClipboard);
+  undoCoordinateButton.addEventListener("click", undoLastAction);
+  redoCoordinateButton.addEventListener("click", redoLastAction);
 
   clearCoordinatesButton.addEventListener("click", function () {
     const text =
       "Are you sure you want to clear coordinates?\nClick OK to confirm or Cancel.";
     if (confirm(text)) {
+      if (dots.length > 0) {
+        commitUndoState();
+      }
       newLine = true;
       dots = [];
       printCoordinates();
@@ -1559,4 +1846,6 @@ document.addEventListener("DOMContentLoaded", function () {
   dragOverModal
     .querySelector(".modal-close")
     .addEventListener("click", hideModal);
+
+  showHelpGuideIfNeeded();
 });

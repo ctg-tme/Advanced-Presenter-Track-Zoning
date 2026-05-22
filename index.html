@@ -50,6 +50,15 @@
             <span class="icon icon-brightness_16" aria-hidden="true"></span>
             <span id="themeToggleText">Dark</span>
           </button>
+          <button
+            id="helpGuideButton"
+            class="theme-toggle help-toggle"
+            type="button"
+            aria-label="Open help guide"
+          >
+            <span class="icon icon-ask-for-help_16" aria-hidden="true"></span>
+            <span>Help</span>
+          </button>
           <a
             href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning"
             target="_blank"
@@ -101,12 +110,16 @@
             <div class="tool-group appearance-group">
               <span class="group-label">Zone Appearance</span>
               <div class="appearance-controls">
-                <label class="stacked-control theme-control" for="zoneTheme">
+                <div class="stacked-control theme-control">
                   <span class="compact-control">
                     <span>Theme</span>
                     <span class="icon icon-appearance_16" aria-hidden="true"></span>
                   </span>
-                  <span class="theme-picker">
+                  <button
+                    id="zoneThemeButton"
+                    class="theme-picker button"
+                    type="button"
+                  >
                     <span
                       id="zoneThemeSwatch"
                       class="theme-swatch"
@@ -115,20 +128,9 @@
                       <span class="theme-swatch-line"></span>
                       <span class="theme-swatch-dot"></span>
                     </span>
-                    <select id="zoneTheme" class="theme-select">
-                      <option value="eveningFjord">Evening Fjord</option>
-                      <option value="poppyBreeze">Poppy Breeze</option>
-                      <option value="meadowStone">Meadow Stone</option>
-                      <option value="auroraSlate">Aurora Slate</option>
-                      <optgroup label="Color blindness">
-                        <option value="deuteranopia">Deuteranopia</option>
-                        <option value="protanopia">Protanopia</option>
-                        <option value="tritanopia">Tritanopia</option>
-                        <option value="monochrome">Monochrome</option>
-                      </optgroup>
-                    </select>
-                  </span>
-                </label>
+                    <span id="zoneThemeName">Evening Fjord</span>
+                  </button>
+                </div>
 
                 <label class="stacked-control" for="lineThickness">
                   <span class="compact-control">
@@ -149,6 +151,11 @@
                   </select>
                 </label>
 
+                <label class="toggle-control stacked-toggle-control" for="dimImage">
+                  <input id="dimImage" type="checkbox" checked />
+                  <span class="toggle-visual" aria-hidden="true"></span>
+                  <span>Dim Image</span>
+                </label>
               </div>
             </div>
 
@@ -170,46 +177,21 @@
                 </label>
 
                 <label class="toggle-control" for="snapToGrid">
-                  <input id="snapToGrid" type="checkbox" />
+                  <input id="snapToGrid" type="checkbox" checked />
                   <span class="toggle-visual" aria-hidden="true"></span>
                   <span>Snap</span>
                 </label>
 
-                <label class="stacked-control shape-control" for="simpleShape">
+                <div class="stacked-control shape-control">
                   <span class="compact-control">
                     <span>Shape</span>
                     <span class="icon icon-shapes_16" aria-hidden="true"></span>
                   </span>
-                  <select id="simpleShape" class="shape-select">
-                    <option value="manual" selected>Manual</option>
-                    <option value="triangle">Triangle</option>
-                    <option value="rectangle">Rectangle</option>
-                    <option value="rhombus">Rhombus</option>
-                    <option value="trapezoid">Trapezoid</option>
-                    <option value="hexagon">Hexagon</option>
-                    <option value="octagon">Octagon</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-
-            <div class="tool-group action-group">
-              <span class="group-label">Actions</span>
-              <div class="action-buttons">
-                <button id="copyCoordinates" class="button copy-button">
-                  <span class="icon icon-copy_16" aria-hidden="true"></span>
-                  <span>Copy</span>
-                </button>
-
-                <button id="undoCoordinate" class="button undo-button">
-                  <span class="icon icon-undo_16" aria-hidden="true"></span>
-                  <span>Undo</span>
-                </button>
-
-                <button id="clearCoordinates" class="button clear-button">
-                  <span class="icon icon-delete_16" aria-hidden="true"></span>
-                  <span>Clear</span>
-                </button>
+                  <button id="addShape" class="button" type="button">
+                    <span class="icon icon-add_16" aria-hidden="true"></span>
+                    <span>Add Shape</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -245,9 +227,30 @@
                 role="status"
                 aria-live="polite"
               >
-                Add at least three points to build a Digital Presenter Track
+                Status: Add at least three points to build a Digital Presenter Track
                 trigger zone.
               </p>
+            </div>
+            <div class="coordinate-actions" aria-label="Coordinate actions">
+              <button id="copyCoordinates" class="button copy-button">
+                <span class="icon icon-copy_16" aria-hidden="true"></span>
+                <span>Copy</span>
+              </button>
+
+              <button id="undoCoordinate" class="button undo-button">
+                <span class="icon icon-undo_16" aria-hidden="true"></span>
+                <span>Undo</span>
+              </button>
+
+              <button id="redoCoordinate" class="button undo-button">
+                <span class="icon icon-undo_16 icon-flip-horizontal" aria-hidden="true"></span>
+                <span>Redo</span>
+              </button>
+
+              <button id="clearCoordinates" class="button clear-button">
+                <span class="icon icon-delete_16" aria-hidden="true"></span>
+                <span>Clear</span>
+              </button>
             </div>
           </div>
         </section>
@@ -288,10 +291,19 @@
                 <h3>Workflow</h3>
                 <ol>
                   <li>Upload a P60/PTZ4K camera screenshot.</li>
-                  <li>Left click points or drag a Shape into place.</li>
+                  <li>Left click points or use Add Shape.</li>
                   <li>Use Snap and Grid when alignment matters.</li>
-                  <li>Drag points to adjust; right click or Undo to remove.</li>
-                  <li>Copy and save under TriggerZone.</li>
+                  <li>Drag points to adjust; use Undo and Redo for history.</li>
+                  <li>
+                    <a
+                      href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span class="icon icon-link_16" aria-hidden="true"></span>
+                      Copy and save under xConfiguration Cameras PresenterTrack TriggerZone
+                    </a>
+                  </li>
                 </ol>
               </section>
 
@@ -305,7 +317,14 @@
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  TriggerZone xAPI reference
+                  xConfiguration Cameras PresenterTrack TriggerZone
+                </a>
+                <a
+                  href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning#readme"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub README
                 </a>
               </section>
             </div>
@@ -323,6 +342,214 @@
         </div>
       </div>
       <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+
+    <div
+      id="themePickerModal"
+      class="modal picker-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="themePickerTitle"
+    >
+      <div class="modal-background" data-close-modal></div>
+        <div class="modal-content picker-dialog">
+          <header class="picker-header">
+            <h2 id="themePickerTitle">Theme</h2>
+          </header>
+          <div class="picker-grid theme-option-grid">
+            <button class="picker-option theme-option" type="button" data-theme="eveningFjord">
+              <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #8aa0ff"></span>
+              <span style="background: #b96f73"></span>
+              </span>
+              <span>Evening Fjord</span>
+            </button>
+          <button class="picker-option theme-option" type="button" data-theme="poppyBreeze">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #3bdbe8"></span>
+              <span style="background: #ff9a76"></span>
+            </span>
+            <span>Poppy Breeze</span>
+          </button>
+          <button class="picker-option theme-option" type="button" data-theme="meadowStone">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #514c41"></span>
+              <span style="background: #f1c857"></span>
+            </span>
+            <span>Meadow Stone</span>
+          </button>
+          <button class="picker-option theme-option" type="button" data-theme="auroraSlate">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #7c5cff"></span>
+              <span style="background: #39d6b2"></span>
+            </span>
+            <span>Aurora Slate</span>
+          </button>
+        </div>
+        <h3 class="picker-section-label">Color blindness</h3>
+        <div class="picker-grid theme-option-grid">
+          <button class="picker-option theme-option" type="button" data-theme="deuteranopia">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #0072b2"></span>
+              <span style="background: #e69f00"></span>
+            </span>
+            <span>Deuteranopia</span>
+          </button>
+          <button class="picker-option theme-option" type="button" data-theme="protanopia">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #56b4e9"></span>
+              <span style="background: #d55e00"></span>
+            </span>
+            <span>Protanopia</span>
+          </button>
+          <button class="picker-option theme-option" type="button" data-theme="tritanopia">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #009e73"></span>
+              <span style="background: #cc79a7"></span>
+            </span>
+            <span>Tritanopia</span>
+          </button>
+          <button class="picker-option theme-option" type="button" data-theme="monochrome">
+            <span class="theme-swatch option-swatch" aria-hidden="true">
+              <span style="background: #111827"></span>
+              <span style="background: #ffffff"></span>
+            </span>
+            <span>Monochrome</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="shapePickerModal"
+      class="modal picker-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="shapePickerTitle"
+    >
+      <div class="modal-background" data-close-modal></div>
+        <div class="modal-content picker-dialog">
+          <header class="picker-header">
+            <h2 id="shapePickerTitle">Add Shape</h2>
+          </header>
+        <div class="picker-grid shape-option-grid">
+          <button class="picker-option shape-option" type="button" data-shape="triangle">
+            <span class="shape-glyph shape-triangle" aria-hidden="true"></span>
+            <span>Triangle</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="rectangle">
+            <span class="shape-glyph shape-rectangle" aria-hidden="true"></span>
+            <span>Rectangle</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="rhombus">
+            <span class="shape-glyph shape-rhombus" aria-hidden="true"></span>
+            <span>Rhombus</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="trapezoid">
+            <span class="shape-glyph shape-trapezoid" aria-hidden="true"></span>
+            <span>Trapezoid</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="parallelogram">
+            <span class="shape-glyph shape-parallelogram" aria-hidden="true"></span>
+            <span>Parallelogram</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="pentagon">
+            <span class="shape-glyph shape-pentagon" aria-hidden="true"></span>
+            <span>Pentagon</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="lShape">
+            <span class="shape-glyph shape-l-shape" aria-hidden="true"></span>
+            <span>L Shape</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="hexagon">
+            <span class="shape-glyph shape-hexagon" aria-hidden="true"></span>
+            <span>Hexagon</span>
+          </button>
+          <button class="picker-option shape-option" type="button" data-shape="octagon">
+            <span class="shape-glyph shape-octagon" aria-hidden="true"></span>
+            <span>Octagon</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="helpGuideModal"
+      class="modal picker-modal help-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="helpGuideTitle"
+    >
+      <div class="modal-background" data-close-modal></div>
+      <div class="modal-content picker-dialog help-dialog">
+        <header class="picker-header">
+          <h2 id="helpGuideTitle">Help Guide</h2>
+        </header>
+        <div class="help-guide-content">
+          <section>
+            <h3>What This Tool Does</h3>
+            <p>
+              Build Cisco Digital Presenter Track TriggerZone coordinates for
+              Cisco P60 and Cisco PTZ4K cameras. This workflow does not apply
+              to Motorized Presenter Track.
+            </p>
+          </section>
+          <section>
+            <h3>Build A Zone</h3>
+            <p>
+              Upload a camera screenshot, click points on the editor, or use
+              Add Shape to drag out a starter polygon. Drag any point to refine
+              the final zone.
+            </p>
+          </section>
+          <section>
+            <h3>Placement Helpers</h3>
+            <p>
+              Snap to Grid is enabled by default and shows a placement preview.
+              Adjust Grid spacing when you need coarser or finer alignment.
+            </p>
+          </section>
+          <section>
+            <h3>Coordinates</h3>
+            <p>
+              Type or paste x,y coordinate pairs. Complete pairs apply
+              automatically; incomplete pairs are ignored until finished and are
+              highlighted without changing your text.
+            </p>
+          </section>
+          <section>
+            <h3>Shortcuts</h3>
+            <ul>
+              <li>Cmd/Ctrl+C copies valid coordinates.</li>
+              <li>Cmd/Ctrl+V pastes coordinates into the editor.</li>
+              <li>Cmd/Ctrl+Z undoes the last zone action.</li>
+              <li>Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y redoes it.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Save</h3>
+            <p>
+              Copy and save under
+              <a
+                href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="icon icon-link_16" aria-hidden="true"></span>
+                xConfiguration Cameras PresenterTrack TriggerZone
+              </a>.
+              Valid coordinates are also written to the URL hash as
+              dptCoordinates.
+            </p>
+          </section>
+        </div>
+        <footer class="help-actions">
+          <button id="dismissHelp" class="button" type="button">Got it</button>
+          <button id="dismissHelpForever" class="button copy-button" type="button">
+            Don't show again
+          </button>
+        </footer>
+      </div>
     </div>
 
     <script src="script.js"></script>

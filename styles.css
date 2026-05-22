@@ -16,8 +16,8 @@ body {
   --app-success: var(--mds-color-theme-text-success-normal, #185e46);
   --app-canvas-bg: var(--mds-color-core-blue-5, #edf8ff);
   --app-canvas-border: var(--mds-color-core-gray-80, #3b3b3b);
-  --zone-theme-dot: #ff8a7a;
-  --zone-theme-line: #67d8ff;
+  --zone-theme-dot: #b96f73;
+  --zone-theme-line: #8aa0ff;
   --app-radius: 0.5rem;
   --app-gap: 0.5rem;
   --app-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
@@ -211,17 +211,19 @@ a:hover {
   align-items: end;
   display: grid;
   gap: 0.55rem;
-  grid-template-columns:
-    minmax(190px, 0.55fr)
-    minmax(250px, auto)
-    minmax(335px, auto)
-    max-content;
+  grid-template-columns: max-content max-content max-content;
+  justify-content: start;
 }
 
 .tool-group {
   display: grid;
   gap: 0.32rem;
   min-width: 0;
+}
+
+.tool-group + .tool-group {
+  border-left: 1px solid var(--app-border-soft);
+  padding-left: 0.75rem;
 }
 
 .group-label,
@@ -299,8 +301,7 @@ select,
 .file-trigger:focus-within,
 .button:focus-visible,
 .input:focus,
-select:focus,
-.theme-select:focus {
+select:focus {
   border-color: var(--app-accent);
   box-shadow: 0 0 0 3px rgba(17, 112, 207, 0.2);
   outline: none;
@@ -310,7 +311,7 @@ select:focus,
   align-items: end;
   display: grid;
   gap: 0.45rem;
-  grid-template-columns: minmax(13rem, max-content) max-content;
+  grid-template-columns: minmax(13rem, max-content) max-content max-content;
 }
 
 .placement-controls {
@@ -345,16 +346,19 @@ select {
 
 .theme-picker {
   align-items: center;
-  display: grid;
+  display: inline-grid;
   gap: 0.35rem;
   grid-template-columns: auto minmax(0, 1fr);
+  justify-content: start;
+  min-width: 12.75rem;
+  text-align: left;
 }
 
 .theme-swatch {
   align-items: center;
   background:
     linear-gradient(135deg, var(--zone-theme-line) 0 50%, var(--zone-theme-dot) 50% 100%);
-  border: 1px solid var(--app-border);
+  border: 0;
   border-radius: 0.375rem;
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
@@ -377,14 +381,6 @@ select {
   background: var(--zone-theme-dot);
 }
 
-.theme-select {
-  width: 12.75rem;
-}
-
-.shape-select {
-  width: 9rem;
-}
-
 .toggle-control {
   align-items: center;
   background: var(--app-surface);
@@ -399,6 +395,10 @@ select {
   margin: 0;
   padding: 0 0.65rem;
   user-select: none;
+}
+
+.stacked-toggle-control {
+  align-self: end;
 }
 
 .toggle-control input {
@@ -446,10 +446,6 @@ select {
   transform: translateX(0.72rem);
 }
 
-.action-group {
-  justify-self: end;
-}
-
 .action-buttons {
   display: grid;
   gap: 0.45rem;
@@ -487,8 +483,10 @@ select {
 }
 
 .coordinate-panel {
+  border-top: 1px solid var(--app-border-soft);
   display: grid;
   gap: 0.35rem;
+  padding-top: 0.55rem;
 }
 
 .coordinate-input-group {
@@ -583,13 +581,19 @@ select {
 .status-row {
   align-items: center;
   display: grid;
-  gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
+  gap: 0.2rem;
+  grid-template-columns: 1fr;
 }
 
 .status-message {
   font-weight: var(--mds-font-weight-bold, 700);
-  text-align: right;
+  text-align: left;
+}
+
+.coordinate-actions {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: flex-start;
 }
 
 .status-message.is-info {
@@ -678,16 +682,16 @@ canvas.is-drawing-shape {
 .guide-content {
   color: var(--app-muted);
   display: grid;
-  font-size: var(--mds-font-size-body-small, 0.75rem);
-  gap: 0.48rem;
-  line-height: 1.25;
+  font-size: 0.72rem;
+  gap: 0.44rem;
+  line-height: 1.28;
   overflow: hidden;
-  padding: 0.65rem;
+  padding: 0.6rem;
 }
 
 .guide-content section {
   border-bottom: 1px solid var(--app-border-soft);
-  padding-bottom: 0.45rem;
+  padding-bottom: 0.44rem;
 }
 
 .guide-content section:last-child {
@@ -697,9 +701,9 @@ canvas.is-drawing-shape {
 
 .guide-content h3 {
   color: var(--app-text);
-  font-size: var(--mds-font-size-body-small, 0.75rem);
+  font-size: 0.7rem;
   font-weight: var(--mds-font-weight-bold, 700);
-  margin: 0 0 0.18rem;
+  margin: 0 0 0.2rem;
 }
 
 .guide-content p,
@@ -710,12 +714,16 @@ canvas.is-drawing-shape {
 
 .guide-content ol,
 .guide-content ul {
-  padding-left: 1rem;
+  padding-left: 0.85rem;
 }
 
 .guide-content a {
+  align-items: center;
   color: var(--app-accent-text);
+  display: inline-flex;
   font-weight: var(--mds-font-weight-bold, 700);
+  gap: 0.2rem;
+  margin-right: 0.45rem;
 }
 
 .modal {
@@ -783,23 +791,206 @@ canvas.is-drawing-shape {
   content: "x";
 }
 
+.picker-dialog {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow);
+  color: var(--app-text);
+  display: grid;
+  gap: 0.8rem;
+  max-height: min(86dvh, 42rem);
+  max-width: min(92vw, 40rem);
+  min-width: min(92vw, 28rem);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.picker-header {
+  align-items: center;
+  display: flex;
+  justify-content: flex-start;
+  min-height: 2rem;
+}
+
+.picker-header h2,
+.picker-section-label {
+  color: var(--app-text);
+  font-size: var(--mds-font-size-body-large, 1rem);
+  font-weight: var(--mds-font-weight-bold, 700);
+  margin: 0;
+}
+
+.picker-header .modal-close {
+  position: static;
+}
+
+.picker-grid {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.theme-option-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shape-option-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.picker-option {
+  align-items: center;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 0.375rem;
+  color: var(--app-text);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  font-weight: var(--mds-font-weight-bold, 700);
+  gap: 0.45rem;
+  justify-items: center;
+  min-height: 5.2rem;
+  padding: 0.7rem;
+}
+
+.picker-option:hover,
+.picker-option:focus-visible,
+.picker-option.is-selected {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 3px rgba(17, 112, 207, 0.18);
+  outline: none;
+}
+
+.option-swatch {
+  height: 2.25rem;
+  width: 4rem;
+}
+
+.option-swatch span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.help-dialog {
+  max-width: min(92vw, 48rem);
+}
+
+.help-guide-content {
+  color: var(--app-muted);
+  display: grid;
+  gap: 0.7rem;
+  line-height: 1.35;
+}
+
+.help-guide-content section {
+  border-bottom: 1px solid var(--app-border-soft);
+  padding-bottom: 0.65rem;
+}
+
+.help-guide-content section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.help-guide-content h3 {
+  color: var(--app-text);
+  font-size: var(--mds-font-size-body-midsize, 0.875rem);
+  font-weight: var(--mds-font-weight-bold, 700);
+  margin: 0 0 0.25rem;
+}
+
+.help-guide-content p,
+.help-guide-content ul {
+  margin: 0;
+}
+
+.help-guide-content ul {
+  padding-left: 1.1rem;
+}
+
+.help-guide-content a {
+  align-items: center;
+  display: inline-flex;
+  font-weight: var(--mds-font-weight-bold, 700);
+  gap: 0.2rem;
+}
+
+.help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.shape-glyph {
+  background: var(--app-accent-soft);
+  border: 3px solid var(--app-accent-text);
+  display: block;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.35));
+  height: 2.5rem;
+  width: 3.4rem;
+}
+
+.shape-triangle {
+  clip-path: polygon(50% 4%, 96% 96%, 4% 96%);
+}
+
+.shape-rectangle {
+  clip-path: polygon(0 12%, 100% 12%, 100% 88%, 0 88%);
+}
+
+.shape-rhombus {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.shape-trapezoid {
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+}
+
+.shape-parallelogram {
+  clip-path: polygon(0 0, 78% 0, 100% 100%, 22% 100%);
+}
+
+.shape-pentagon {
+  clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+}
+
+.shape-l-shape {
+  clip-path: polygon(0 0, 100% 0, 100% 38%, 38% 38%, 38% 100%, 0 100%);
+}
+
+.shape-hexagon {
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+.shape-octagon {
+  clip-path: polygon(
+    28% 0,
+    72% 0,
+    100% 28%,
+    100% 72%,
+    72% 100%,
+    28% 100%,
+    0 72%,
+    0 28%
+  );
+}
+
 @media screen and (max-width: 1020px) {
   .tool-bar {
-    grid-template-columns: minmax(175px, 0.75fr) minmax(250px, auto);
+    grid-template-columns: max-content max-content;
   }
 
-  .placement-group,
-  .action-group {
+  .placement-group {
     grid-column: 1 / -1;
     justify-self: stretch;
   }
 
   .placement-controls {
     grid-template-columns: max-content max-content minmax(9rem, 1fr);
-  }
-
-  .action-buttons {
-    grid-template-columns: repeat(3, 1fr);
   }
 
   .workspace {
@@ -871,22 +1062,11 @@ canvas.is-drawing-shape {
 
   .theme-picker {
     grid-template-columns: 2.7rem minmax(0, 1fr);
-  }
-
-  .theme-select {
-    width: 100%;
-  }
-
-  .shape-select {
-    width: 100%;
+    min-width: 0;
   }
 
   select {
     width: 3.7rem;
-  }
-
-  .action-group {
-    grid-column: 1 / -1;
   }
 
   .coordinate-input-group {
@@ -895,10 +1075,6 @@ canvas.is-drawing-shape {
 
   .coordinate-label {
     display: none;
-  }
-
-  .status-row {
-    grid-template-columns: 1fr;
   }
 
   #coordinateHelp {
