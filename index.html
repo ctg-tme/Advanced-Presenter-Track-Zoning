@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="assets/momentum/css/mds-core.css" />
     <link rel="stylesheet" href="assets/momentum/css/mds-typography.css" />
     <link rel="stylesheet" href="assets/momentum/css/mds-theme-light.css" />
+    <link rel="stylesheet" href="assets/momentum/css/mds-theme-dark.css" />
     <link rel="stylesheet" href="assets/momentum/css/mds-elevation.css" />
     <link rel="stylesheet" href="assets/momentum/css/momentum-fonts.css" />
     <link
@@ -25,7 +26,10 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
 
-  <body class="mds-core mds-typography mds-theme-stable-lightWebex mds-elevation">
+  <body
+    class="mds-core mds-typography mds-theme-stable-lightWebex mds-elevation"
+    data-theme="light"
+  >
     <div class="app-shell">
       <header class="app-header">
         <a class="brand" href="./" aria-label="Digital Presenter Track Zone Builder">
@@ -35,9 +39,17 @@
           />
           <span>Digital Presenter Track Zone Builder</span>
         </a>
-        <div class="header-meta" aria-label="Compatibility">
-          <span>Digital Presenter Track only</span>
-          <span>P60 / PTZ4K</span>
+        <div class="header-meta">
+          <button
+            id="themeToggle"
+            class="theme-toggle"
+            type="button"
+            aria-label="Switch to dark mode"
+            aria-pressed="false"
+          >
+            <span class="icon icon-brightness_16" aria-hidden="true"></span>
+            <span id="themeToggleText">Dark</span>
+          </button>
           <a
             href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning"
             target="_blank"
@@ -63,36 +75,59 @@
           <div class="tool-bar">
             <div class="tool-group upload-group">
               <span class="group-label">Presenter Camera View</span>
-              <label class="file-trigger" for="uploadImage">
-                <input
-                  class="file-input"
-                  id="uploadImage"
-                  type="file"
-                  name="presenter-camera-view"
-                  accept="image/*"
-                />
-                <span class="icon icon-upload_16" aria-hidden="true"></span>
-                <span>Upload</span>
-                <span class="icon icon-file-image_16" aria-hidden="true"></span>
-              </label>
-              <p id="uploadFileName" class="help">Default sample image loaded.</p>
+              <div class="image-actions">
+                <label class="file-trigger" for="uploadImage">
+                  <input
+                    class="file-input"
+                    id="uploadImage"
+                    type="file"
+                    name="presenter-camera-view"
+                    accept="image/*"
+                  />
+                  <span class="icon icon-upload_16" aria-hidden="true"></span>
+                  <span>Upload</span>
+                  <span class="icon icon-file-image_16" aria-hidden="true"></span>
+                </label>
+                <button id="clearImage" class="button image-clear-button" type="button">
+                  <span class="icon icon-delete_16" aria-hidden="true"></span>
+                  <span>Clear Image</span>
+                </button>
+              </div>
+              <p id="uploadFileName" class="help">
+                Sample image shown. Upload your camera view.
+              </p>
             </div>
 
             <div class="tool-group appearance-group">
               <span class="group-label">Zone Appearance</span>
               <div class="appearance-controls">
-                <label class="stacked-control" for="lineColor">
+                <label class="stacked-control theme-control" for="zoneTheme">
                   <span class="compact-control">
-                    <span>Line</span>
-                    <span class="icon icon-area-chart_16" aria-hidden="true"></span>
+                    <span>Theme</span>
+                    <span class="icon icon-appearance_16" aria-hidden="true"></span>
                   </span>
-                  <input
-                    id="lineColor"
-                    class="color-input"
-                    type="color"
-                    name="line-color"
-                    value="#007ea7"
-                  />
+                  <span class="theme-picker">
+                    <span
+                      id="zoneThemeSwatch"
+                      class="theme-swatch"
+                      aria-hidden="true"
+                    >
+                      <span class="theme-swatch-line"></span>
+                      <span class="theme-swatch-dot"></span>
+                    </span>
+                    <select id="zoneTheme" class="theme-select">
+                      <option value="eveningFjord">Evening Fjord</option>
+                      <option value="poppyBreeze">Poppy Breeze</option>
+                      <option value="meadowStone">Meadow Stone</option>
+                      <option value="auroraSlate">Aurora Slate</option>
+                      <optgroup label="Color blindness">
+                        <option value="deuteranopia">Deuteranopia</option>
+                        <option value="protanopia">Protanopia</option>
+                        <option value="tritanopia">Tritanopia</option>
+                        <option value="monochrome">Monochrome</option>
+                      </optgroup>
+                    </select>
+                  </span>
                 </label>
 
                 <label class="stacked-control" for="lineThickness">
@@ -114,18 +149,46 @@
                   </select>
                 </label>
 
-                <label class="stacked-control" for="dotColor">
+              </div>
+            </div>
+
+            <div class="tool-group placement-group">
+              <span class="group-label">Placement</span>
+              <div class="placement-controls">
+                <label class="stacked-control" for="gridSpacing">
                   <span class="compact-control">
-                    <span>Points</span>
+                    <span>Grid</span>
+                    <span class="icon icon-area-selector_16" aria-hidden="true"></span>
+                  </span>
+                  <select id="gridSpacing">
+                    <option value="20">20</option>
+                    <option value="40" selected>40</option>
+                    <option value="60">60</option>
+                    <option value="80">80</option>
+                    <option value="120">120</option>
+                  </select>
+                </label>
+
+                <label class="toggle-control" for="snapToGrid">
+                  <input id="snapToGrid" type="checkbox" />
+                  <span class="toggle-visual" aria-hidden="true"></span>
+                  <span>Snap</span>
+                </label>
+
+                <label class="stacked-control shape-control" for="simpleShape">
+                  <span class="compact-control">
+                    <span>Shape</span>
                     <span class="icon icon-shapes_16" aria-hidden="true"></span>
                   </span>
-                  <input
-                    id="dotColor"
-                    class="color-input"
-                    type="color"
-                    name="point-color"
-                    value="#f2a900"
-                  />
+                  <select id="simpleShape" class="shape-select">
+                    <option value="manual" selected>Manual</option>
+                    <option value="triangle">Triangle</option>
+                    <option value="rectangle">Rectangle</option>
+                    <option value="rhombus">Rhombus</option>
+                    <option value="trapezoid">Trapezoid</option>
+                    <option value="hexagon">Hexagon</option>
+                    <option value="octagon">Octagon</option>
+                  </select>
                 </label>
               </div>
             </div>
@@ -154,21 +217,26 @@
           <div class="coordinate-panel">
             <div class="coordinate-input-group">
               <span class="coordinate-label">Coordinates</span>
-              <input
-                id="coordinates"
-                class="input"
-                type="text"
-                placeholder="Click editor or paste coordinates, e.g. 120,220,620,220,620,520"
-                aria-describedby="coordinateHelp statusMessage"
-              />
-              <button class="button push-button" id="pushCoordinates">
-                <span class="icon icon-arrow-tail-down_16" aria-hidden="true"></span>
-                <span>Push</span>
-              </button>
+              <div class="coordinate-editor">
+                <div
+                  id="coordinateHighlights"
+                  class="coordinate-highlights"
+                  aria-hidden="true"
+                ></div>
+                <input
+                  id="coordinates"
+                  class="input"
+                  type="text"
+                  placeholder="Click editor or paste coordinates, e.g. 120,220,620,220,620,520"
+                  aria-describedby="coordinateHelp statusMessage"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
             </div>
             <div class="status-row">
               <p id="coordinateHelp" class="help">
-                x,y pairs inside 1920 x 1080. TriggerZone closes the shape
+                Type x,y pairs inside 1920 x 1080. Complete pairs apply
                 automatically.
               </p>
               <p
@@ -220,8 +288,9 @@
                 <h3>Workflow</h3>
                 <ol>
                   <li>Upload a P60/PTZ4K camera screenshot.</li>
-                  <li>Left click to add; drag points to adjust.</li>
-                  <li>Right click or Undo to remove points.</li>
+                  <li>Left click points or drag a Shape into place.</li>
+                  <li>Use Snap and Grid when alignment matters.</li>
+                  <li>Drag points to adjust; right click or Undo to remove.</li>
                   <li>Copy and save under TriggerZone.</li>
                 </ol>
               </section>
