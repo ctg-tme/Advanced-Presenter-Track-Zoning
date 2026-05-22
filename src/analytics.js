@@ -23,6 +23,7 @@ let trackEvent = null;
 let analyticsReady = false;
 let lastSummarySignature = "";
 let resolvedAppKey = null;
+let currentXLaunch = "";
 
 function analyticsConfigured() {
   return Boolean(resolvedAppKey) || APTABASE_APP_KEY !== APTABASE_KEY_PLACEHOLDER;
@@ -62,6 +63,10 @@ function normalizeProp(value) {
   return String(value).slice(0, 1000);
 }
 
+function normalizeXLaunch(value) {
+  return normalizeProp(value).trim();
+}
+
 function normalizeProps(props = {}) {
   const normalized = {
     app: "digital-presenter-track-zone-builder",
@@ -69,6 +74,10 @@ function normalizeProps(props = {}) {
     environment: getEnvironment(),
     eventVersion: 1,
   };
+
+  if (currentXLaunch) {
+    normalized.xLaunch = currentXLaunch;
+  }
 
   Object.entries(props).forEach(([key, value]) => {
     normalized[key] = normalizeProp(value);
@@ -156,6 +165,7 @@ function commonSnapshotProps(snapshot) {
     isValidZone: snapshot.isValidZone,
     snapToGrid: snapshot.snapToGrid,
     themeMode: snapshot.themeMode,
+    xLaunch: snapshot.xLaunch || "",
     zoneTheme: snapshot.zoneTheme,
   };
 }
@@ -184,11 +194,30 @@ function sessionMetricProps(snapshot, trigger) {
 }
 
 export function initAnalytics(snapshot) {
+  currentXLaunch = normalizeXLaunch(snapshot.xLaunch);
   loadSdk();
   sendEvent("session_started", {
     ...commonSnapshotProps(snapshot),
     screenHeight: window.innerHeight,
     screenWidth: window.innerWidth,
+  });
+
+  if (currentXLaunch) {
+    sendEvent("cross_launch", {
+      ...commonSnapshotProps(snapshot),
+      xLaunch: currentXLaunch,
+    });
+  }
+}
+
+export function trackCrossLaunch(xLaunch, snapshot) {
+  const normalizedXLaunch = normalizeXLaunch(xLaunch);
+  if (!normalizedXLaunch || normalizedXLaunch === currentXLaunch) return;
+
+  currentXLaunch = normalizedXLaunch;
+  sendEvent("cross_launch", {
+    ...commonSnapshotProps({ ...snapshot, xLaunch: normalizedXLaunch }),
+    xLaunch: normalizedXLaunch,
   });
 }
 

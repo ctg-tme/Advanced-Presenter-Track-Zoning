@@ -922,6 +922,39 @@ canvas.is-drawing-shape {
   gap: 0.2rem;
 }
 
+.camera-reference-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.65rem;
+}
+
+.camera-reference {
+  background: var(--app-surface-raised);
+  border: 1px solid var(--app-border-soft);
+  border-radius: 0.5rem;
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.65rem;
+  text-align: center;
+}
+
+.camera-reference img {
+  background: var(--app-canvas-bg);
+  border-radius: 0.35rem;
+  display: block;
+  height: 7rem;
+  object-fit: contain;
+  width: 100%;
+}
+
+.camera-reference figcaption {
+  color: var(--app-text);
+  font-size: var(--mds-font-size-body-small, 0.75rem);
+  font-weight: var(--mds-font-weight-bold, 700);
+}
+
 .help-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1147,5 +1180,9 @@ canvas.is-drawing-shape {
 
   .guide-content section:not(:first-child) {
     display: none;
+  }
+
+  .camera-reference-grid {
+    grid-template-columns: 1fr;
   }
 }

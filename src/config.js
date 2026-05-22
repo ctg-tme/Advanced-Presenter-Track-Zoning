@@ -19,6 +19,7 @@ export const MINIMUM_SHAPE_SIZE = 24;
 
 export const MANUAL_SHAPE_VALUE = "manual";
 export const COORDINATES_HASH_PARAM = "dptCoordinates";
+export const XLAUNCH_HASH_PARAM = "xLaunch";
 export const UNSET_COORDINATES_VALUE = "notSet";
 
 export const HELP_DISMISSED_KEY = "aptzb-help-dismissed";

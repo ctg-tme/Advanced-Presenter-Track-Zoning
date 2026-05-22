@@ -33,6 +33,7 @@ import {
   initAnalytics,
   trackCoordinateEdit,
   trackCoordinatesCopied,
+  trackCrossLaunch,
   trackFeedbackOpened,
   trackFeedbackSubmitted,
   trackHelpOpened,
@@ -43,7 +44,9 @@ import {
 } from "./analytics.js";
 import {
   getCoordinatesHashValue,
+  getXLaunchHashValue,
   hashExplicitlyUnset,
+  normalizeVisibleHashParams,
   updateCoordinatesHash,
 } from "./url-hash.js";
 
@@ -128,6 +131,7 @@ export function startApp() {
       pointCount: dots.length,
       snapToGrid,
       themeMode: document.body.dataset.theme || "light",
+      xLaunch: getXLaunchHashValue(),
       zoneTheme: currentZoneThemeName,
     };
   }
@@ -1191,6 +1195,12 @@ export function startApp() {
     });
 
     window.addEventListener("hashchange", function () {
+      const xLaunch = getXLaunchHashValue();
+      if (xLaunch) {
+        normalizeVisibleHashParams();
+        trackCrossLaunch(xLaunch, getAnalyticsSnapshot());
+      }
+
       const hashCoordinates = getCoordinatesHashValue();
       if (!hashCoordinates) {
         if (hashExplicitlyUnset()) {

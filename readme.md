@@ -119,6 +119,7 @@ points can be dragged like any manually placed zone.
 - The Help button in the header reopens the guide at any time.
 - The guide summarizes compatibility, drawing, placement helpers, coordinate
   entry, shortcuts, and where to save the final values.
+- The compatibility section includes PTZ4K and P60 visual references.
 
 ### Feedback
 
@@ -185,6 +186,7 @@ Tracked events include:
   hidden or exited.
 - `feedback_submitted`: survey rating, use case, outcome, and requested
   improvement.
+- `cross_launch`: emitted when the URL hash includes `xLaunch`.
 
 The app intentionally avoids sending raw coordinate values, image data, or
 uploaded file names.
@@ -220,6 +222,16 @@ explicit enough to support future features without ambiguity.
 
 Legacy `#coordinates` and `#coords` values are accepted and normalized to
 `#dptCoordinates`.
+
+Cross-launching apps can identify themselves with:
+
+```text
+#xLaunch=sourceAppName&dptCoordinates=x,y,x,y,x,y
+```
+
+When `xLaunch` is present, its value is included in Aptabase events as
+`xLaunch` and a dedicated `cross_launch` event is sent. If `xLaunch` is present
+without a value, it is normalized to `notSet`.
 
 ## Point Key
 
@@ -282,4 +294,4 @@ coordinates are accepted.
 - `src/dom.js`: DOM element collection.
 - `src/geometry.js`: point math, shape generation, and zone validation.
 - `src/history.js`: Undo/Redo state management.
-- `src/url-hash.js`: `dptCoordinates` hash read/write behavior.
+- `src/url-hash.js`: `dptCoordinates` and `xLaunch` hash read/write behavior.
