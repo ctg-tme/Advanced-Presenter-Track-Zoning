@@ -29,10 +29,18 @@ jobs:
           APTABASE_API_KEY: ${{ secrets.APTABASE_API_KEY }}
         run: |
           if [ -z "$APTABASE_API_KEY" ]; then
-            echo "::warning::APTABASE_API_KEY secret is not set; analytics will stay disabled."
-          else
-            sed -i -e "s/aptabase_api_key_placeholder/${APTABASE_API_KEY}/g" src/config.js
+            echo "::error::APTABASE_API_KEY secret is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
           fi
+          sed -i -e "s|aptabase_api_key_placeholder|${APTABASE_API_KEY}|g" src/config.js
+
+      - name: Verify Aptabase app key injection
+        run: |
+          if grep -q "aptabase_api_key_placeholder" src/config.js; then
+            echo "::error::Aptabase app key placeholder was not replaced."
+            exit 1
+          fi
+          echo "Aptabase app key was injected into the Pages artifact."
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

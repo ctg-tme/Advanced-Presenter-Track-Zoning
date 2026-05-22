@@ -135,7 +135,20 @@ This static GitHub Pages app uses
 [`@aptabase/web`](https://github.com/aptabase/aptabase-js). The committed app
 contains only the placeholder `aptabase_api_key_placeholder`. During the GitHub
 Pages deployment, `.github/workflows/deploy-pages.yml` replaces that placeholder
-with the repository secret `APTABASE_API_KEY`.
+with the repository secret `APTABASE_API_KEY`. The workflow now fails the
+deployment if the secret is missing or if the placeholder remains in the Pages
+artifact.
+
+For hosted analytics, make sure GitHub Pages is configured to build from
+GitHub Actions rather than deploying directly from a branch. Otherwise Pages can
+serve the committed source files before the workflow has a chance to inject the
+key.
+
+Production setup:
+
+1. Add a repository Actions secret named `APTABASE_API_KEY`.
+2. In GitHub Pages settings, set the source to `GitHub Actions`.
+3. Run the `Deploy static content to Pages` workflow or push to `main`.
 
 The app treats `localhost`, `127.0.0.1`, and `::1` as debug sessions when a key
 has been injected. The hosted `ctg-tme.github.io` page is treated as live.
