@@ -150,11 +150,9 @@ Production setup:
 2. In GitHub Pages settings, set the source to `GitHub Actions`.
 3. Run the `Deploy static content to Pages` workflow or push to `main`.
 
-The deploy workflow opts into GitHub Actions' Node 24 runtime, copies the static
-site into a separate Pages artifact, injects the Aptabase key there, and uploads
-only that artifact. It also writes `pages-build-marker.txt` into the published
-site so you can confirm the live page came from the workflow instead of direct
-branch publishing.
+The deploy workflow opts into GitHub Actions' Node 24 runtime, injects the
+Aptabase key into the checked-out static files, verifies the placeholder is
+gone, and uploads the repository as the Pages artifact.
 
 The app treats `localhost`, `127.0.0.1`, and `::1` as debug sessions when a key
 has been injected. The hosted `ctg-tme.github.io` page is treated as live.

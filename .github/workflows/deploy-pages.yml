@@ -27,56 +27,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Build Pages artifact
+      - name: Inject Aptabase app key
         env:
           APTABASE_API_KEY: ${{ secrets.APTABASE_API_KEY }}
-          ARTIFACT_DIR: ${{ runner.temp }}/pages-artifact
         run: |
-          set -euo pipefail
-
-          if [ -z "${APTABASE_API_KEY}" ]; then
+          if [ -z "$APTABASE_API_KEY" ]; then
             echo "::error::APTABASE_API_KEY secret is not set. Add it in Settings > Secrets and variables > Actions."
             exit 1
           fi
+          sed -i -e "s/aptabase_api_key_placeholder/${APTABASE_API_KEY}/g" src/config.js
 
-          mkdir -p "$ARTIFACT_DIR"
-          rsync -a --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='.env.local' \
-            --exclude='src/local-env.js' \
-            ./ "$ARTIFACT_DIR/"
-
-          node <<'NODE'
-          const fs = require("fs");
-          const path = require("path");
-
-          const artifactDir = process.env.ARTIFACT_DIR;
-          const configPath = path.join(artifactDir, "src/config.js");
-          const placeholder = "aptabase_api_key_placeholder";
-          const key = process.env.APTABASE_API_KEY;
-          const source = fs.readFileSync(configPath, "utf8");
-
-          if (!source.includes(placeholder)) {
-            console.error("::error::Aptabase placeholder was not found in the artifact config.");
-            process.exit(1);
-          }
-
-          fs.writeFileSync(configPath, source.replaceAll(placeholder, key));
-          NODE
-
-          if grep -q "aptabase_api_key_placeholder" "$ARTIFACT_DIR/src/config.js"; then
+      - name: Verify Aptabase app key injection
+        run: |
+          if grep -q "aptabase_api_key_placeholder" src/config.js; then
             echo "::error::Aptabase app key placeholder was not replaced."
             exit 1
           fi
-
-          {
-            echo "source=github-actions"
-            echo "commit=$GITHUB_SHA"
-            echo "builtAt=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          } > "$ARTIFACT_DIR/pages-build-marker.txt"
-
           echo "Aptabase app key was injected into the Pages artifact."
 
       - name: Setup Pages
@@ -85,7 +51,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: ${{ runner.temp }}/pages-artifact
+          path: "."
 
       - name: Deploy to GitHub Pages
         id: deployment
