@@ -1,0 +1,10 @@
+/**
+ * Do not edit directly
+ */
+
+.mds-elevation {
+  --mds-elevation-1: drop-shadow(0px 2px 8px rgba(0,0,0,0.2));
+  --mds-elevation-2: drop-shadow(0px 4px 16px rgba(0,0,0,0.2));
+  --mds-elevation-3: drop-shadow(0px 6px 24px rgba(0,0,0,0.25));
+  --mds-elevation-4: drop-shadow(0px 12px 48px rgba(0,0,0,0.25));
+}

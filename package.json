@@ -1,0 +1,10 @@
+{
+  "name": "advanced-presenter-track-zoning",
+  "private": true,
+  "description": "Static GitHub Pages tool for Cisco Digital Presenter Track TriggerZone coordinates.",
+  "dependencies": {
+    "@momentum-design/tokens": "^0.10.3",
+    "@momentum-ui/core": "^19.16.1",
+    "@momentum-ui/icons": "^8.33.0"
+  }
+}
