@@ -59,6 +59,15 @@
             <span class="icon icon-ask-for-help_16" aria-hidden="true"></span>
             <span>Help</span>
           </button>
+          <button
+            id="feedbackButton"
+            class="theme-toggle feedback-toggle"
+            type="button"
+            aria-label="Open feedback survey"
+          >
+            <span class="icon icon-annotation_16" aria-hidden="true"></span>
+            <span>Feedback</span>
+          </button>
           <a
             href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning"
             target="_blank"
@@ -527,6 +536,14 @@
             </ul>
           </section>
           <section>
+            <h3>Feedback & Privacy</h3>
+            <p>
+              The Feedback button opens a short survey. Tool usage and point
+              counts are sent to Aptabase, but raw coordinates, uploaded
+              images, and file names are not sent.
+            </p>
+          </section>
+          <section>
             <h3>Save</h3>
             <p>
               Copy and save under
@@ -552,6 +569,85 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <div
+      id="feedbackModal"
+      class="modal picker-modal feedback-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="feedbackTitle"
+    >
+      <div class="modal-background" data-close-modal></div>
+      <div class="modal-content picker-dialog feedback-dialog">
+        <header class="picker-header">
+          <h2 id="feedbackTitle">Feedback</h2>
+        </header>
+        <form id="feedbackForm" class="feedback-form">
+          <label class="feedback-field" for="feedbackRating">
+            <span>How useful is this tool?</span>
+            <select id="feedbackRating" name="rating" required>
+              <option value="5">5 - Very useful</option>
+              <option value="4">4 - Useful</option>
+              <option value="3">3 - Neutral</option>
+              <option value="2">2 - Not useful yet</option>
+              <option value="1">1 - Blocking my workflow</option>
+            </select>
+          </label>
+
+          <label class="feedback-field" for="feedbackUseCase">
+            <span>What were you doing?</span>
+            <select id="feedbackUseCase" name="useCase" required>
+              <option value="new_zone">Building a new zone</option>
+              <option value="refine_zone">Refining an existing zone</option>
+              <option value="paste_coordinates">Pasting or validating coordinates</option>
+              <option value="learn_workflow">Learning the workflow</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+
+          <label class="feedback-field" for="feedbackOutcome">
+            <span>How did it go?</span>
+            <select id="feedbackOutcome" name="outcome" required>
+              <option value="completed">I completed the task</option>
+              <option value="almost">I got close</option>
+              <option value="confusing">Something was confusing</option>
+              <option value="missing_feature">A feature was missing</option>
+              <option value="blocked_bug">I hit a bug</option>
+            </select>
+          </label>
+
+          <p id="feedbackBugNotice" class="feedback-bug-notice" hidden>
+            Bugs are easiest to fix from
+            <a
+              href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub Issues
+            </a>
+            where screenshots and repro steps can be attached.
+          </p>
+
+          <label class="feedback-field" for="feedbackMissing">
+            <span>What would help most?</span>
+            <select id="feedbackMissing" name="missing" required>
+              <option value="nothing">Nothing right now</option>
+              <option value="shape_options">More shape options</option>
+              <option value="grid_snap">Better grid or snap controls</option>
+              <option value="coordinate_entry">Coordinate entry improvements</option>
+              <option value="documentation">More guide/readme detail</option>
+              <option value="other">Something else</option>
+            </select>
+          </label>
+
+          <p id="feedbackStatus" class="help feedback-status" role="status"></p>
+          <footer class="help-actions">
+            <button id="feedbackCancel" class="button" type="button">Cancel</button>
+            <button class="button copy-button" type="submit">Submit Feedback</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
   </body>
 </html>

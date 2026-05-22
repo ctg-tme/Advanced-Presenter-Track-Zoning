@@ -2,7 +2,12 @@
   "name": "advanced-presenter-track-zoning",
   "private": true,
   "description": "Static GitHub Pages tool for Cisco Digital Presenter Track TriggerZone coordinates.",
+  "scripts": {
+    "dev": "npm run local-env && python3 -m http.server 5174 --bind 127.0.0.1",
+    "local-env": "node scripts/generate-local-env.mjs"
+  },
   "dependencies": {
+    "@aptabase/web": "^0.5.0",
     "@momentum-design/tokens": "^0.10.3",
     "@momentum-ui/core": "^19.16.1",
     "@momentum-ui/icons": "^8.33.0"

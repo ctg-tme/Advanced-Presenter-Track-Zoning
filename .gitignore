@@ -1,3 +1,5 @@
 ToDo.md
 .DS_Store
 node_modules/
+.env.local
+src/local-env.js

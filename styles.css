@@ -878,6 +878,10 @@ canvas.is-drawing-shape {
   max-width: min(92vw, 48rem);
 }
 
+.feedback-dialog {
+  max-width: min(92vw, 34rem);
+}
+
 .help-guide-content {
   color: var(--app-muted);
   display: grid;
@@ -923,6 +927,40 @@ canvas.is-drawing-shape {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.feedback-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.feedback-field {
+  color: var(--app-text);
+  display: grid;
+  font-weight: var(--mds-font-weight-bold, 700);
+  gap: 0.25rem;
+}
+
+.feedback-field select {
+  width: 100%;
+}
+
+.feedback-bug-notice {
+  background: var(--app-accent-soft);
+  border-left: 3px solid var(--app-accent);
+  border-radius: 0.375rem;
+  color: var(--app-muted);
+  line-height: 1.35;
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+}
+
+.feedback-bug-notice a {
+  font-weight: var(--mds-font-weight-bold, 700);
+}
+
+.feedback-status {
+  min-height: 1rem;
 }
 
 .shape-glyph {
@@ -1013,6 +1051,11 @@ canvas.is-drawing-shape {
   }
 
   #themeToggleText {
+    display: none;
+  }
+
+  .help-toggle span:last-child,
+  .feedback-toggle span:last-child {
     display: none;
   }
 
