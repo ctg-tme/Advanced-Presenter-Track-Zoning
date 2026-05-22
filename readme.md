@@ -150,6 +150,10 @@ Production setup:
 2. In GitHub Pages settings, set the source to `GitHub Actions`.
 3. Run the `Deploy static content to Pages` workflow or push to `main`.
 
+The deploy workflow opts into GitHub Actions' Node 24 runtime and uses current
+Pages action versions so key injection and artifact upload happen before the
+site is published.
+
 The app treats `localhost`, `127.0.0.1`, and `::1` as debug sessions when a key
 has been injected. The hosted `ctg-tme.github.io` page is treated as live.
 Other `github.io` hosts are treated as forks or mirrors and analytics remains

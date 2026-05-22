@@ -14,6 +14,9 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     environment:
@@ -22,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Inject Aptabase app key
         env:
@@ -32,7 +35,7 @@ jobs:
             echo "::error::APTABASE_API_KEY secret is not set. Add it in Settings > Secrets and variables > Actions."
             exit 1
           fi
-          sed -i -e "s|aptabase_api_key_placeholder|${APTABASE_API_KEY}|g" src/config.js
+          node -e "const fs = require('fs'); const path = 'src/config.js'; const placeholder = 'aptabase_api_key_placeholder'; const key = process.env.APTABASE_API_KEY; const source = fs.readFileSync(path, 'utf8'); if (!source.includes(placeholder)) { console.error('::error::Aptabase placeholder was not found in src/config.js.'); process.exit(1); } fs.writeFileSync(path, source.replaceAll(placeholder, key));"
 
       - name: Verify Aptabase app key injection
         run: |
@@ -43,13 +46,13 @@ jobs:
           echo "Aptabase app key was injected into the Pages artifact."
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: "."
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
