@@ -87,7 +87,7 @@ Theme options:
 
 ### Placement
 
-- Grid spacing selector: 20, 40, 60, 80, or 120 pixels.
+- Grid spacing selections.
 - Snap to Grid toggle, enabled by default.
 - Add Shape modal with:
   - Triangle
@@ -132,50 +132,6 @@ points can be dragged like any manually placed zone.
 
 ## Analytics
 
-This static GitHub Pages app uses
-[`@aptabase/web`](https://github.com/aptabase/aptabase-js). The committed app
-contains only the placeholder `aptabase_api_key_placeholder`. During the GitHub
-Pages deployment, `.github/workflows/deploy-pages.yml` replaces that placeholder
-with the repository secret `APTABASE_API_KEY`. The workflow now fails the
-deployment if the secret is missing or if the placeholder remains in the Pages
-artifact.
-
-For hosted analytics, make sure GitHub Pages is configured to build from
-GitHub Actions rather than deploying directly from a branch. Otherwise Pages can
-serve the committed source files before the workflow has a chance to inject the
-key.
-
-Production setup:
-
-1. Add a repository Actions secret named `APTABASE_API_KEY`.
-2. In GitHub Pages settings, set the source to `GitHub Actions`.
-3. Run the `Deploy static content to Pages` workflow or push to `main`.
-
-The deploy workflow opts into GitHub Actions' Node 24 runtime, injects the
-Aptabase key into the checked-out static files, verifies the placeholder is
-gone, and uploads the repository as the Pages artifact.
-
-The app treats `localhost`, `127.0.0.1`, and `::1` as debug sessions when a key
-has been injected. The hosted `ctg-tme.github.io` page is treated as live.
-Other `github.io` hosts are treated as forks or mirrors and analytics remains
-disabled unless the code is intentionally changed.
-
-For local debugging, create `.env.local` from `.env.local.example`:
-
-```bash
-APTABASE_API_KEY=your_aptabase_app_key
-```
-
-Then run:
-
-```bash
-npm run local-env
-```
-
-This generates the ignored file `src/local-env.js`, which the browser imports
-only on local debug hosts when the committed config still has the placeholder.
-`npm run dev` runs the generator and starts a static server on port 5174.
-
 Tracked events include:
 
 - `session_started`: app/session context, display theme, zone theme, grid,
@@ -190,11 +146,6 @@ Tracked events include:
 
 The app intentionally avoids sending raw coordinate values, image data, or
 uploaded file names.
-
-Because this is a static browser app, the injected Aptabase key is visible in
-the deployed page source. The workflow keeps the key out of the repository and
-prevents accidental fork reuse, but it is not a replacement for a server-side
-proxy if the key ever needs to be truly secret.
 
 ## Keyboard Shortcuts
 

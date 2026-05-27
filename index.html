@@ -23,7 +23,7 @@
       rel="stylesheet"
       href="assets/momentum/css/momentum-ui-icons.min.css"
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260527-mobile-status-tools" />
   </head>
 
   <body
@@ -89,7 +89,7 @@
           </p>
         </section>
 
-        <section class="control-deck" aria-label="Zone editor controls">
+        <section id="controlDeck" class="control-deck" aria-label="Zone editor controls">
           <div class="tool-bar">
             <div class="tool-group upload-group">
               <span class="group-label">Presenter Camera View</span>
@@ -177,10 +177,13 @@
                     <span class="icon icon-area-selector_16" aria-hidden="true"></span>
                   </span>
                   <select id="gridSpacing">
+                    <option value="10">10</option>
+                    <option value="15">15</option>
                     <option value="20">20</option>
                     <option value="40" selected>40</option>
                     <option value="60">60</option>
                     <option value="80">80</option>
+                    <option value="100">100</option>
                     <option value="120">120</option>
                   </select>
                 </label>
@@ -189,6 +192,12 @@
                   <input id="snapToGrid" type="checkbox" checked />
                   <span class="toggle-visual" aria-hidden="true"></span>
                   <span>Snap</span>
+                </label>
+
+                <label class="toggle-control" for="showCoordinateLabels">
+                  <input id="showCoordinateLabels" type="checkbox" />
+                  <span class="toggle-visual" aria-hidden="true"></span>
+                  <span>Labels</span>
                 </label>
 
                 <div class="stacked-control shape-control">
@@ -201,11 +210,22 @@
                     <span>Add Shape</span>
                   </button>
                 </div>
+
+                <div class="stacked-control capture-control">
+                  <span class="compact-control">
+                    <span>PNG</span>
+                    <span class="icon icon-camera-photo_16" aria-hidden="true"></span>
+                  </span>
+                  <button id="captureCanvasButton" class="button" type="button">
+                    <span class="icon icon-download_16" aria-hidden="true"></span>
+                    <span>Capture</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="coordinate-panel">
+          <div id="coordinatePanel" class="coordinate-panel">
             <div class="coordinate-input-group">
               <span class="coordinate-label">Coordinates</span>
               <div class="coordinate-editor">
@@ -240,8 +260,33 @@
                 trigger zone.
               </p>
             </div>
+            <div
+              id="mobileCoordinateKeypad"
+              class="mobile-coordinate-keypad"
+              aria-label="Coordinate keypad"
+            >
+              <button class="button" type="button" data-coordinate-key="1">1</button>
+              <button class="button" type="button" data-coordinate-key="2">2</button>
+              <button class="button" type="button" data-coordinate-key="3">3</button>
+              <button class="button" type="button" data-coordinate-key="4">4</button>
+              <button class="button" type="button" data-coordinate-key="5">5</button>
+              <button class="button" type="button" data-coordinate-key="6">6</button>
+              <button class="button" type="button" data-coordinate-key="7">7</button>
+              <button class="button" type="button" data-coordinate-key="8">8</button>
+              <button class="button" type="button" data-coordinate-key="9">9</button>
+              <button class="button" type="button" data-coordinate-key=",">,</button>
+              <button class="button" type="button" data-coordinate-key="0">0</button>
+              <button
+                class="button"
+                type="button"
+                data-coordinate-key="backspace"
+                aria-label="Backspace"
+              >
+                <span class="icon icon-backspace_16" aria-hidden="true"></span>
+              </button>
+            </div>
             <div class="coordinate-actions" aria-label="Coordinate actions">
-              <button id="copyCoordinates" class="button copy-button">
+              <button id="copyCoordinates" class="button copy-button tooltip-button">
                 <span class="icon icon-copy_16" aria-hidden="true"></span>
                 <span>Copy</span>
               </button>
@@ -275,9 +320,12 @@
             </div>
           </article>
 
-          <aside class="app-panel guide-panel">
+          <aside id="guidePanel" class="app-panel guide-panel">
             <header class="panel-header">
               <h2>Guide</h2>
+              <button id="closeGuidePanel" class="button guide-close-button" type="button">
+                Done
+              </button>
             </header>
             <div class="guide-content">
               <section>
@@ -298,47 +346,73 @@
 
               <section>
                 <h3>Workflow</h3>
-                <ol>
-                  <li>Upload a P60/PTZ4K camera screenshot.</li>
-                  <li>Left click points or use Add Shape.</li>
-                  <li>Use Snap and Grid when alignment matters.</li>
+                <ul>
+                  <li>Upload a 1920x1080 P60/PTZ4K camera snapshot.</li>
+                  <ul>
+                    <li>This can be captured in the Call UI of the Codec's WebUI if the RemoteMonitoring Key is installed. Right click on the Camera image and save to file</li>
+                    <li>Or this can done by placing the codec in a Call and take a 16:9 aspect ratio screenshot.</li>
+                  </ul>
+                  <li>Left click on the Zone Editor canvas to create a new Point</li>
+                  <li>3 Points are required to form a valid TriggerZone</li>
+                  <li>Right Click on a Point to Delete a Point</li>
+                  <li>Right Click on a Line to Create a Point in that segment of the line</li>
                   <li>Drag points to adjust; use Undo and Redo for history.</li>
-                  <li>
-                    <a
-                      href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <span class="icon icon-link_16" aria-hidden="true"></span>
-                      Copy and save under xConfiguration Cameras PresenterTrack TriggerZone
-                    </a>
-                  </li>
-                </ol>
+                  <li>Leverage the Tools Above to optimized your work</li>
+                  <li>When finished, Copy the coordinates above and apply them to <a href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/" target="_blank" rel="noopener noreferrer" > <span class="icon icon-link_16" aria-hidden="true"></span> xConfiguration Cameras PresenterTrack TriggerZone </a> </li>
+                </ul>
               </section>
 
               <section>
                 <h3>Notes</h3>
-                <p>
-                  Do not repeat the first point. Avoid intersecting lines.
-                </p>
-                <a
-                  href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  xConfiguration Cameras PresenterTrack TriggerZone
-                </a>
-                <a
-                  href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning#readme"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub README
-                </a>
+                <ul>
+                  <li>Coordinates are limited to 1920 x 1080.</li>
+                  <li>Only 1 TriggerZone can be created for Digital Presenter Track.</li>
+                  <li>This solution does NOT apply to Motorized Presenter Track for the Cisco Room Vision PTZ Camera. The Cisco Room Navigator offers a UserInterface to configure Trigger and Stage Zones.</li>
+                  <li>Closing the shape is not required, the solution assume the first and last point form the shape</li>
+                  <li>Avoid intersecting lines, as this can cause issues</li>
+                  <li>It's best to avoid Photos and Displays within your custom TriggerZone</li>
+                  <li>Mobile editing is optimized in landscape orientation</li>
+                  <li>For more information, refer to the <a href="https://github.com/ctg-tme/Advanced-Presenter-Track-Zoning#readme" target="_blank" rel="noopener noreferrer" > GitHub README </a></li>
+                </ul>
+                
               </section>
             </div>
           </aside>
         </section>
+
+        <button
+          id="mobileCoordinatesButton"
+          class="button copy-button mobile-coordinates-button"
+          type="button"
+          aria-label="Coordinates"
+          aria-expanded="false"
+          aria-pressed="false"
+          aria-controls="coordinatePanel"
+        >
+          <span class="coordinate-axis-label">X,Y</span>
+        </button>
+
+        <button
+          id="mobileGuideButton"
+          class="button mobile-guide-button guide-action-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="guidePanel"
+        >
+          <span class="icon icon-guide-regular" aria-hidden="true"></span>
+          <span>Guide</span>
+        </button>
+
+        <button
+          id="mobileToolsButton"
+          class="button copy-button mobile-tools-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="controlDeck"
+        >
+          <span class="icon icon-list-menu_16" aria-hidden="true"></span>
+          <span>Tools</span>
+        </button>
       </main>
     </div>
 
@@ -483,6 +557,33 @@
     </div>
 
     <div
+      id="capturePickerModal"
+      class="modal picker-modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-labelledby="capturePickerTitle"
+    >
+      <div class="modal-background" data-close-modal></div>
+      <div class="modal-content picker-dialog">
+        <header class="picker-header">
+          <h2 id="capturePickerTitle">Capture PNG</h2>
+        </header>
+        <div class="picker-grid capture-option-grid">
+          <button id="captureFullCanvas" class="picker-option capture-option" type="button">
+            <span class="icon icon-camera-photo_24" aria-hidden="true"></span>
+            <span>Full Canvas</span>
+            <small>Image, grid, zone, and labels</small>
+          </button>
+          <button id="captureOverlayCanvas" class="picker-option capture-option" type="button">
+            <span class="icon icon-view-thumbnail_24" aria-hidden="true"></span>
+            <span>Transparent Overlay</span>
+            <small>Grid and coordinates only</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
       id="helpGuideModal"
       class="modal picker-modal help-modal"
       aria-hidden="true"
@@ -513,7 +614,7 @@
               </figure>
               <figure class="camera-reference">
                 <img
-                  src="assets/cameras/p60.jpg"
+                  src="assets/cameras/p60.png"
                   alt="Cisco P60 camera"
                   loading="lazy"
                 />
@@ -522,18 +623,23 @@
             </div>
           </section>
           <section>
-            <h3>Build A Zone</h3>
+            <h3>What's this tool for?</h3>
             <p>
-              Upload a camera screenshot, click points on the editor, or use
-              Add Shape to drag out a starter polygon. Drag any point to refine
-              the final zone.
+              Cisco's Presenter Camera Mode for the P60 and PTZ4K cameras can be configured with a custom TriggerZone shape. <br> <br>
+              
+              By default, the WebUI of the codec only allows for a basic rectangular shape, but this is not a limitation of the API. Setting custom shapes can be done by manually configuring the coordinates of the TriggerZone and this tool was built to help you visualize and generate the coordinates for your custom TriggerZone.  <br> <br>
+              
+              The generated coordinates can be copied and pasted into <a href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/" target="_blank" rel="noopener noreferrer" > <span class="icon icon-link_16" aria-hidden="true"></span> xConfiguration Cameras PresenterTrack TriggerZone </a>. <br> <br>
+
+              Custom TriggerZones allow you to avoid areas that could cause Camera Automation to start unexpectedly, such as a large display with people or a photo on the wall. You can also use custom TriggerZones to avoid areas that are not relevant to your presentation, such as a podium or a table in front of the presenter. <br> <br>
             </p>
           </section>
           <section>
             <h3>Placement Helpers</h3>
             <p>
               Snap to Grid is enabled by default and shows a placement preview.
-              Adjust Grid spacing when you need coarser or finer alignment.
+              Adjust Grid spacing when you need coarser or finer alignment. On
+              mobile, landscape orientation gives the most room for drawing.
             </p>
           </section>
           <section>
@@ -552,22 +658,6 @@
               <li>Cmd/Ctrl+Z undoes the last zone action.</li>
               <li>Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y redoes it.</li>
             </ul>
-          </section>
-          <section>
-            <h3>Save</h3>
-            <p>
-              Copy and save under
-              <a
-                href="https://roomos.cisco.com/xapi/Configuration.Cameras.PresenterTrack.TriggerZone/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span class="icon icon-link_16" aria-hidden="true"></span>
-                xConfiguration Cameras PresenterTrack TriggerZone
-              </a>.
-              Valid coordinates are also written to the URL hash as
-              dptCoordinates.
-            </p>
           </section>
         </div>
         <footer class="help-actions">
@@ -658,6 +748,6 @@
       </div>
     </div>
 
-    <script type="module" src="script.js"></script>
+    <script type="module" src="script.js?v=20260527-mobile-status-tools"></script>
   </body>
 </html>

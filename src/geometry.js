@@ -3,7 +3,7 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   MINIMUM_SHAPE_SIZE,
-} from "./config.js";
+} from "./config.js?v=20260526-xy-status-placement-2";
 
 export function clonePoints(points) {
   return points.map((point) => ({ x: point.x, y: point.y }));

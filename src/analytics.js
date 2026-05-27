@@ -2,7 +2,7 @@ import {
   ANALYTICS_ALLOWED_HOSTS,
   APTABASE_APP_KEY,
   APTABASE_SDK_URL,
-} from "./config.js";
+} from "./config.js?v=20260526-xy-status-placement-2";
 
 const APTABASE_KEY_PLACEHOLDER = "aptabase_api_key_placeholder";
 

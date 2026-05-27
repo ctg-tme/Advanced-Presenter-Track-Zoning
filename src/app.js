@@ -12,14 +12,14 @@ import {
   STORED_THEME_KEY,
   TRIANGLE_SIZE,
   ZONE_THEMES,
-} from "./config.js";
+} from "./config.js?v=20260526-xy-status-placement-2";
 import {
   formatCoordinates,
   parseCoordinateEntry,
   renderCoordinateHighlights,
   syncCoordinateHighlightScroll,
 } from "./coordinates.js";
-import { getDomElements } from "./dom.js";
+import { getDomElements } from "./dom.js?v=20260526-xy-status-placement-2";
 import {
   clonePoints,
   createShapePoints,
@@ -54,10 +54,15 @@ export function startApp() {
   const elements = getDomElements();
   const {
     addShapeButton,
+    captureCanvasButton,
+    captureFullCanvasButton,
+    captureOverlayCanvasButton,
+    capturePickerModal,
     canvas,
     clearCoordinatesButton,
     clearImageButton,
     coordinateHighlights,
+    coordinateKeypadButtons,
     coordinatesInput,
     copyCoordinatesButton,
     ctx,
@@ -75,13 +80,19 @@ export function startApp() {
     feedbackRating,
     feedbackStatus,
     feedbackUseCase,
+    closeGuidePanelButton = document.getElementById("closeGuidePanel"),
+    guidePanel = document.getElementById("guidePanel"),
     gridSpacingInput,
     helpGuideButton,
     helpGuideModal,
     lineThicknessInput,
+    mobileCoordinatesButton = document.getElementById("mobileCoordinatesButton"),
+    mobileGuideButton = document.getElementById("mobileGuideButton"),
+    mobileToolsButton = document.getElementById("mobileToolsButton"),
     redoCoordinateButton,
     shapeOptionButtons,
     shapePickerModal,
+    showCoordinateLabelsInput,
     snapToGridInput,
     statusMessage,
     themeOptionButtons,
@@ -102,10 +113,12 @@ export function startApp() {
   let lineColor = currentZoneTheme.line;
   let previewLineColor = lineColor;
   let dotColor = currentZoneTheme.dot;
+  let gridColor = currentZoneTheme.grid;
   let lineThickness = parseInt(lineThicknessInput.value, 10);
   let dimImage = dimImageInput.checked;
   let gridSpacing = parseInt(gridSpacingInput.value, 10);
   let snapToGrid = snapToGridInput.checked;
+  let showCoordinateLabels = showCoordinateLabelsInput.checked;
   let selectedShape = MANUAL_SHAPE_VALUE;
   let imageLoaded = false;
   let imageIsSample = true;
@@ -115,6 +128,9 @@ export function startApp() {
   let shapeDragState = null;
   let suppressNextClick = false;
   let typedCoordinateTracked = false;
+  let mobileCoordinateCursor = 0;
+  let coordinateMeasureElement = null;
+  let copyTooltipTimer;
 
   const history = createHistoryManager({
     getState: getZoneState,
@@ -139,6 +155,31 @@ export function startApp() {
   function setStatus(message, type = "info") {
     statusMessage.textContent = `Status: ${message}`;
     statusMessage.className = `help status-message is-${type}`;
+
+    if (mobileCoordinatesButton) {
+      const hasCoordinateIssue =
+        type === "danger" ||
+        type === "warning" ||
+        (type === "info" && !validateZone(dots).valid);
+      const indicatorType = type === "danger" ? "danger" : "warning";
+
+      mobileCoordinatesButton.classList.toggle(
+        "has-status-indicator",
+        hasCoordinateIssue
+      );
+      mobileCoordinatesButton.classList.toggle(
+        "is-status-danger",
+        hasCoordinateIssue && indicatorType === "danger"
+      );
+      mobileCoordinatesButton.classList.toggle(
+        "is-status-warning",
+        hasCoordinateIssue && indicatorType === "warning"
+      );
+      mobileCoordinatesButton.setAttribute(
+        "aria-label",
+        hasCoordinateIssue ? `Coordinates need attention: ${message}` : "Coordinates"
+      );
+    }
   }
 
   function getZoneState() {
@@ -168,7 +209,11 @@ export function startApp() {
   function closePickerModals() {
     closeModal(themePickerModal);
     closeModal(shapePickerModal);
+    closeModal(capturePickerModal);
     closeModal(helpGuideModal);
+    closeGuidePanel();
+    closeMobileCoordinatesPanel();
+    closeMobileToolsPanel();
     closeFeedbackModal();
   }
 
@@ -185,9 +230,11 @@ export function startApp() {
     lineColor = currentZoneTheme.line;
     previewLineColor = lineColor;
     dotColor = currentZoneTheme.dot;
+    gridColor = currentZoneTheme.grid;
     zoneThemeName.textContent = getThemeLabel(currentZoneThemeName);
     document.body.style.setProperty("--zone-theme-line", lineColor);
     document.body.style.setProperty("--zone-theme-dot", dotColor);
+    document.body.style.setProperty("--zone-theme-grid", gridColor);
     themeOptionButtons.forEach((button) => {
       const isSelected = button.dataset.theme === currentZoneThemeName;
       button.classList.toggle("is-selected", isSelected);
@@ -228,17 +275,83 @@ export function startApp() {
     ctx.shadowOffsetY = 5;
   }
 
-  function setLineShadow() {
-    ctx.shadowColor = "rgba(0, 0, 0, 0.72)";
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+  function setLineShadow(options = {}) {
+    const strong = options.strong;
+    ctx.shadowColor = strong ? "rgba(0, 0, 0, 0.92)" : "rgba(0, 0, 0, 0.72)";
+    ctx.shadowBlur = strong ? 14 : 8;
+    ctx.shadowOffsetX = strong ? 3 : 2;
+    ctx.shadowOffsetY = strong ? 3 : 2;
   }
 
-  function strokeLine() {
-    setLineShadow();
+  function strokeLine(options = {}) {
+    setLineShadow(options);
     ctx.stroke();
     clearShadow();
+  }
+
+  function createZonePath(points) {
+    if (!points || points.length < 3) return false;
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    points.slice(1).forEach((point) => {
+      ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    return true;
+  }
+
+  function getPointBounds(points) {
+    return points.reduce(
+      (bounds, point) => ({
+        maxX: Math.max(bounds.maxX, point.x),
+        maxY: Math.max(bounds.maxY, point.y),
+        minX: Math.min(bounds.minX, point.x),
+        minY: Math.min(bounds.minY, point.y),
+      }),
+      {
+        maxX: -Infinity,
+        maxY: -Infinity,
+        minX: Infinity,
+        minY: Infinity,
+      }
+    );
+  }
+
+  function drawZoneFill(points) {
+    if (!validateZone(points).valid || !createZonePath(points)) return;
+
+    const bounds = getPointBounds(points);
+    const padding = 48;
+    const hatchSpacing = 24;
+    const startX = bounds.minX - padding;
+    const endX = bounds.maxX + padding;
+    const startY = bounds.minY - padding;
+    const endY = bounds.maxY + padding;
+
+    ctx.save();
+    ctx.globalAlpha = 0.14;
+    ctx.fillStyle = lineColor;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    createZonePath(points);
+    ctx.clip();
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = Math.max(1.5, lineThickness * 0.45);
+    ctx.setLineDash([10, 12]);
+
+    for (let x = startX - (endY - startY); x < endX + (endY - startY); x += hatchSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, endY);
+      ctx.lineTo(x + (endY - startY), startY);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+    ctx.setLineDash([]);
   }
 
   function clearShadow() {
@@ -250,7 +363,7 @@ export function startApp() {
 
   function getCanvasTheme() {
     const isDarkTheme = document.body.dataset.theme === "dark";
-    const grid = "rgba(128, 128, 128, 0.3)";
+    const grid = gridColor || "rgba(128, 128, 128, 0.3)";
     return isDarkTheme
       ? {
           empty: "#0e1013",
@@ -381,13 +494,212 @@ export function startApp() {
     ctx.restore();
   }
 
+  function getCoordinateLabelPosition(targetContext, point, label) {
+    const offset = DOT_RADIUS + 12;
+    const metrics = targetContext.measureText(label);
+    const height = 24;
+    let x = point.x + offset;
+    let y = point.y - offset;
+
+    if (x + metrics.width > CANVAS_WIDTH - 8) {
+      x = point.x - offset - metrics.width;
+    }
+    if (y < height) {
+      y = point.y + offset + height * 0.4;
+    }
+
+    return {
+      x: Math.max(8, Math.min(CANVAS_WIDTH - metrics.width - 8, x)),
+      y: Math.max(height, Math.min(CANVAS_HEIGHT - 8, y)),
+    };
+  }
+
+  function drawCoordinateLabels(targetContext = ctx, points = dots) {
+    if (!showCoordinateLabels || points.length === 0) return;
+
+    targetContext.save();
+    targetContext.font = "700 22px Momentum, Inter, Arial, sans-serif";
+    targetContext.textBaseline = "middle";
+    targetContext.fillStyle = dotColor;
+    targetContext.shadowColor = "rgba(0, 0, 0, 0.9)";
+    targetContext.shadowBlur = 8;
+    targetContext.shadowOffsetX = 2;
+    targetContext.shadowOffsetY = 2;
+
+    points.forEach((point) => {
+      const label = `${point.x}, ${point.y}`;
+      const position = getCoordinateLabelPosition(targetContext, point, label);
+      targetContext.fillText(label, position.x, position.y);
+    });
+
+    targetContext.restore();
+  }
+
+  function drawGridOnContext(targetContext) {
+    targetContext.strokeStyle = getCanvasTheme().grid;
+    targetContext.lineWidth = 1;
+    for (let x = gridSpacing; x < CANVAS_WIDTH; x += gridSpacing) {
+      targetContext.beginPath();
+      targetContext.moveTo(x, 0);
+      targetContext.lineTo(x, CANVAS_HEIGHT);
+      targetContext.stroke();
+    }
+    for (let y = gridSpacing; y < CANVAS_HEIGHT; y += gridSpacing) {
+      targetContext.beginPath();
+      targetContext.moveTo(0, y);
+      targetContext.lineTo(CANVAS_WIDTH, y);
+      targetContext.stroke();
+    }
+  }
+
+  function createZonePathOnContext(targetContext, points) {
+    if (!points || points.length < 3) return false;
+
+    targetContext.beginPath();
+    targetContext.moveTo(points[0].x, points[0].y);
+    points.slice(1).forEach((point) => {
+      targetContext.lineTo(point.x, point.y);
+    });
+    targetContext.closePath();
+    return true;
+  }
+
+  function drawZoneFillOnContext(targetContext, points) {
+    if (!validateZone(points).valid || !createZonePathOnContext(targetContext, points)) {
+      return;
+    }
+
+    const bounds = getPointBounds(points);
+    const padding = 48;
+    const hatchSpacing = 24;
+    const startX = bounds.minX - padding;
+    const endX = bounds.maxX + padding;
+    const startY = bounds.minY - padding;
+    const endY = bounds.maxY + padding;
+
+    targetContext.save();
+    targetContext.globalAlpha = 0.14;
+    targetContext.fillStyle = lineColor;
+    targetContext.fill();
+    targetContext.restore();
+
+    targetContext.save();
+    createZonePathOnContext(targetContext, points);
+    targetContext.clip();
+    targetContext.globalAlpha = 0.28;
+    targetContext.strokeStyle = lineColor;
+    targetContext.lineWidth = Math.max(1.5, lineThickness * 0.45);
+    targetContext.setLineDash([10, 12]);
+
+    for (let x = startX - (endY - startY); x < endX + (endY - startY); x += hatchSpacing) {
+      targetContext.beginPath();
+      targetContext.moveTo(x, endY);
+      targetContext.lineTo(x + (endY - startY), startY);
+      targetContext.stroke();
+    }
+
+    targetContext.restore();
+    targetContext.setLineDash([]);
+  }
+
+  function setContextLineShadow(targetContext, strong = false) {
+    targetContext.shadowColor = strong ? "rgba(0, 0, 0, 0.92)" : "rgba(0, 0, 0, 0.72)";
+    targetContext.shadowBlur = strong ? 14 : 8;
+    targetContext.shadowOffsetX = strong ? 3 : 2;
+    targetContext.shadowOffsetY = strong ? 3 : 2;
+  }
+
+  function clearContextShadow(targetContext) {
+    targetContext.shadowColor = "transparent";
+    targetContext.shadowBlur = 0;
+    targetContext.shadowOffsetX = 0;
+    targetContext.shadowOffsetY = 0;
+  }
+
+  function strokeContextLine(targetContext, strong = false) {
+    setContextLineShadow(targetContext, strong);
+    targetContext.stroke();
+    clearContextShadow(targetContext);
+  }
+
+  function drawZoneLinesOnContext(targetContext, points) {
+    targetContext.strokeStyle = lineColor;
+    targetContext.lineWidth = lineThickness * 1.5;
+
+    points.forEach((point, index) => {
+      if (index > 0) {
+        targetContext.beginPath();
+        targetContext.moveTo(points[index - 1].x, points[index - 1].y);
+        targetContext.lineTo(point.x, point.y);
+        strokeContextLine(targetContext);
+      }
+
+      if (points.length > 2 && index === points.length - 1) {
+        targetContext.beginPath();
+        targetContext.moveTo(point.x, point.y);
+        if (newLine) {
+          targetContext.globalAlpha = 0.8;
+          targetContext.setLineDash([10, 8]);
+        }
+        targetContext.lineTo(points[0].x, points[0].y);
+        strokeContextLine(targetContext, newLine);
+        targetContext.setLineDash([]);
+        targetContext.globalAlpha = 1;
+      }
+    });
+  }
+
+  function drawDotsOnContext(targetContext, points) {
+    points.forEach((point, index) => {
+      targetContext.beginPath();
+      targetContext.shadowColor = "rgba(0, 0, 0, 1)";
+      targetContext.shadowBlur = 10;
+      targetContext.shadowOffsetX = 5;
+      targetContext.shadowOffsetY = 5;
+      targetContext.fillStyle = dotColor;
+      if (index === 0) {
+        targetContext.moveTo(point.x, point.y - TRIANGLE_SIZE);
+        targetContext.lineTo(point.x - TRIANGLE_SIZE, point.y + TRIANGLE_SIZE);
+        targetContext.lineTo(point.x + TRIANGLE_SIZE, point.y + TRIANGLE_SIZE);
+        targetContext.closePath();
+        targetContext.fill();
+      } else if (index === points.length - 1) {
+        targetContext.fillRect(
+          point.x - SQUARE_SIZE,
+          point.y - SQUARE_SIZE,
+          SQUARE_SIZE * 2,
+          SQUARE_SIZE * 2
+        );
+      } else {
+        targetContext.arc(point.x, point.y, DOT_RADIUS, 0, Math.PI * 2);
+        targetContext.closePath();
+        targetContext.fill();
+      }
+      clearContextShadow(targetContext);
+    });
+  }
+
+  function drawCoordinateOverlayOnContext(targetContext) {
+    targetContext.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    drawGridOnContext(targetContext);
+    drawZoneFillOnContext(targetContext, dots);
+    drawZoneLinesOnContext(targetContext, dots);
+    drawDotsOnContext(targetContext, dots);
+    drawCoordinateLabels(targetContext, dots);
+  }
+
   function draw(cursor, options = {}) {
     let hoverStart = false;
     drawBackground();
     drawGrid();
 
+    if (imageIsSample) {
+      drawSampleImageHint();
+    }
+
     ctx.strokeStyle = lineColor;
     ctx.lineWidth = lineThickness * 1.5;
+    drawZoneFill(dots);
 
     if (cursor && newLine && dots.length > 0) {
       hoverStart = isNearStart(cursor);
@@ -412,12 +724,16 @@ export function startApp() {
       }
 
       if (dots.length > 2 && index === dots.length - 1) {
+        ctx.beginPath();
+        ctx.moveTo(dot.x, dot.y);
         if (newLine) {
           ctx.globalAlpha = 0.8;
           ctx.setLineDash([10, 8]);
         }
         ctx.lineTo(dots[0].x, dots[0].y);
-        strokeLine();
+        strokeLine({
+          strong: newLine,
+        });
         ctx.setLineDash([]);
         ctx.globalAlpha = 1;
       }
@@ -449,14 +765,11 @@ export function startApp() {
       clearShadow();
     });
 
+    drawCoordinateLabels();
     drawShapePreview(options.shapePreviewPoints);
 
     if (snapToGrid) {
       drawSnapPreview(options.snapPreviewPoint || cursor);
-    }
-
-    if (imageIsSample) {
-      drawSampleImageHint();
     }
 
     ctx.setLineDash([]);
@@ -473,6 +786,7 @@ export function startApp() {
       value,
       highlightIssue
     );
+    updateMobileCoordinateCursorVisual();
     dots = parsed.points;
     newLine = dots.length < 3;
     if (options.recordHistory) {
@@ -514,6 +828,10 @@ export function startApp() {
       coordinatesInput.value = "";
       renderCoordinateHighlights(coordinatesInput, coordinateHighlights, "", null);
       updateCoordinatesHash([]);
+      setStatus(
+        "Add at least three points to build a Digital Presenter Track trigger zone.",
+        "info"
+      );
       return;
     }
 
@@ -530,6 +848,7 @@ export function startApp() {
       coordinatesInput.value,
       null
     );
+    updateMobileCoordinateCursorVisual();
     updateCoordinatesHash(dots);
   }
 
@@ -576,9 +895,140 @@ export function startApp() {
     return -1;
   }
 
-  function isNearStart(point) {
+  function getClosestPointOnSegment(point, startPoint, endPoint) {
+    const dx = endPoint.x - startPoint.x;
+    const dy = endPoint.y - startPoint.y;
+    const lengthSquared = dx * dx + dy * dy;
+
+    if (lengthSquared === 0) {
+      return {
+        distance: getDistance(point, startPoint),
+        point: { ...startPoint },
+      };
+    }
+
+    const ratio = Math.max(
+      0,
+      Math.min(
+        1,
+        ((point.x - startPoint.x) * dx + (point.y - startPoint.y) * dy) /
+          lengthSquared
+      )
+    );
+    const projectedPoint = clampPoint({
+      x: Math.round(startPoint.x + dx * ratio),
+      y: Math.round(startPoint.y + dy * ratio),
+    });
+
+    return {
+      distance: getDistance(point, projectedPoint),
+      point: projectedPoint,
+    };
+  }
+
+  function getLineInsertion(point) {
+    if (dots.length < 2) return null;
+
+    const insertionTolerance = Math.max(DOT_RADIUS + 14, lineThickness * 4);
+    const edges = [];
+
+    for (let index = 0; index < dots.length - 1; index += 1) {
+      edges.push({
+        end: dots[index + 1],
+        insertIndex: index + 1,
+        start: dots[index],
+      });
+    }
+
+    if (dots.length > 2) {
+      edges.push({
+        end: dots[0],
+        insertIndex: dots.length,
+        start: dots[dots.length - 1],
+      });
+    }
+
+    return edges.reduce((bestInsertion, edge) => {
+      const projection = getClosestPointOnSegment(point, edge.start, edge.end);
+      const tooCloseToEndpoint =
+        getDistance(projection.point, edge.start) <= DOT_RADIUS + 3 ||
+        getDistance(projection.point, edge.end) <= DOT_RADIUS + 3;
+
+      if (tooCloseToEndpoint || projection.distance > insertionTolerance) {
+        return bestInsertion;
+      }
+
+      if (!bestInsertion || projection.distance < bestInsertion.distance) {
+        return {
+          ...edge,
+          distance: projection.distance,
+          point: projection.point,
+        };
+      }
+
+      return bestInsertion;
+    }, null);
+  }
+
+  function insertPointOnLine(point) {
+    const insertion = getLineInsertion(point);
+    if (!insertion) return false;
+
+    const candidateDots = [
+      ...dots.slice(0, insertion.insertIndex),
+      insertion.point,
+      ...dots.slice(insertion.insertIndex),
+    ];
+    const validation = validatePointMove(candidateDots);
+
+    if (!validation.valid) {
+      setStatus(`Point insert blocked. ${validation.message}`, "danger");
+      return true;
+    }
+
+    history.commit();
+    dots = candidateDots;
+    printCoordinates();
+    draw();
+    trackPointEdit("point_insert");
+    setStatus("Point inserted on line.", "success");
+    return true;
+  }
+
+  function getEndJoinTolerance() {
+    return snapToGrid ? DOT_RADIUS + 10 : DOT_RADIUS + 32;
+  }
+
+  function isNearStart(point, tolerance = DOT_RADIUS + 10) {
     if (dots.length < 3) return false;
-    return getDistance(dots[0], point) < DOT_RADIUS + 10;
+    return getDistance(dots[0], point) < tolerance;
+  }
+
+  function canJoinEndToStart(point) {
+    return (
+      newLine &&
+      dots.length >= 4 &&
+      dragState &&
+      dragState.dotIndex === dots.length - 1 &&
+      isNearStart(point, getEndJoinTolerance())
+    );
+  }
+
+  function closeZoneFromDraggedEndpoint() {
+    const candidateDots = dots.slice(0, -1);
+    const validation = validateZone(candidateDots);
+    if (!validation.valid) {
+      setStatus(`Close blocked. ${validation.message}`, "danger");
+      return false;
+    }
+
+    dots = candidateDots;
+    newLine = false;
+    printCoordinates();
+    draw();
+    trackPointEdit("zone_close");
+    setStatus("Endpoint joined to start. Coordinates are ready to copy.", "success");
+    return true;
   }
 
   function getShapeLabel(shapeName) {
@@ -813,6 +1263,87 @@ export function startApp() {
     reader.readAsDataURL(file);
   }
 
+  function getPngFileName(type) {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    return `dpt-zone-${type}-${timestamp}.png`;
+  }
+
+  function downloadCanvasPng(sourceCanvas, fileName) {
+    const link = document.createElement("a");
+    link.download = fileName;
+    link.href = sourceCanvas.toDataURL("image/png");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  function captureFullCanvasPng() {
+    downloadCanvasPng(canvas, getPngFileName("full-canvas"));
+    closeModal(capturePickerModal);
+    trackToolUse("capture_png", { mode: "full_canvas" });
+    setStatus("Full canvas PNG captured.", "success");
+  }
+
+  function captureOverlayPng() {
+    const overlayCanvas = document.createElement("canvas");
+    const overlayContext = overlayCanvas.getContext("2d");
+    overlayCanvas.width = CANVAS_WIDTH;
+    overlayCanvas.height = CANVAS_HEIGHT;
+    drawCoordinateOverlayOnContext(overlayContext);
+    downloadCanvasPng(overlayCanvas, getPngFileName("transparent-overlay"));
+    closeModal(capturePickerModal);
+    trackToolUse("capture_png", { mode: "transparent_overlay" });
+    setStatus("Transparent overlay PNG captured.", "success");
+  }
+
+  function showCopyTooltip() {
+    clearTimeout(copyTooltipTimer);
+    copyCoordinatesButton.dataset.tooltip = "Copied!";
+    copyCoordinatesButton.classList.add("is-tooltip-visible");
+    copyTooltipTimer = window.setTimeout(() => {
+      copyCoordinatesButton.classList.remove("is-tooltip-visible");
+    }, 1200);
+  }
+
+  function handleCopySuccess() {
+    showCopyTooltip();
+    setStatus("Coordinates copied to clipboard.", "success");
+  }
+
+  function copyTextWithFallback(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "0";
+    textArea.style.top = "0";
+    textArea.style.width = "1px";
+    textArea.style.height = "1px";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus({ preventScroll: true });
+    textArea.select();
+    textArea.setSelectionRange(0, text.length);
+
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (error) {
+      copied = false;
+    }
+
+    textArea.remove();
+    return copied;
+  }
+
+  function handleCopyFailure() {
+    coordinatesInput.focus();
+    coordinatesInput.select();
+    setStatus(
+      "Clipboard copy failed. The coordinates field is selected.",
+      "warning"
+    );
+  }
+
   function copyCoordinatesToClipboard() {
     const validation = validateZone(dots);
     if (!validation.valid) {
@@ -822,26 +1353,27 @@ export function startApp() {
 
     const coordinatesString = formatCoordinates(dots, true);
     trackCoordinatesCopied(getAnalyticsSnapshot());
+    showCopyTooltip();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(coordinatesString)
-        .then(() => {
-          setStatus("Coordinates copied to clipboard.", "success");
-        })
+        .then(handleCopySuccess)
         .catch(() => {
-          coordinatesInput.focus();
-          coordinatesInput.select();
-          setStatus(
-            "Clipboard copy failed. The coordinates field is selected.",
-            "warning"
-          );
+          if (copyTextWithFallback(coordinatesString)) {
+            handleCopySuccess();
+            return;
+          }
+          handleCopyFailure();
         });
       return;
     }
 
-    coordinatesInput.focus();
-    coordinatesInput.select();
-    setStatus("Clipboard access is unavailable. The coordinates field is selected.", "warning");
+    if (copyTextWithFallback(coordinatesString)) {
+      handleCopySuccess();
+      return;
+    }
+
+    handleCopyFailure();
   }
 
   function pasteCoordinatesFromText(text) {
@@ -864,6 +1396,218 @@ export function startApp() {
 
   function closeHelpGuide() {
     closeModal(helpGuideModal);
+  }
+
+  function openGuidePanel() {
+    if (!guidePanel || !mobileGuideButton) return;
+    closeMobileCoordinatesPanel();
+    closeMobileToolsPanel();
+    guidePanel.classList.add("is-open");
+    document.body.classList.add("is-guide-panel-open");
+    mobileGuideButton.setAttribute("aria-expanded", "true");
+    trackHelpOpened("mobile_guide_panel");
+  }
+
+  function openMobileCoordinatesPanel() {
+    if (!mobileCoordinatesButton) return;
+    closeGuidePanel();
+    closeMobileToolsPanel();
+    document.body.classList.add("is-mobile-coordinates-open");
+    mobileCoordinatesButton.setAttribute("aria-expanded", "true");
+    mobileCoordinatesButton.setAttribute("aria-pressed", "true");
+    coordinatesInput.readOnly = true;
+    coordinatesInput.setAttribute("inputmode", "none");
+    coordinatesInput.blur();
+    setCoordinateInputSelection(coordinatesInput.value.length);
+    trackToolUse("mobile_coordinates_panel", { action: "open" });
+  }
+
+  function closeMobileCoordinatesPanel() {
+    if (!mobileCoordinatesButton) return;
+    document.body.classList.remove("is-mobile-coordinates-open");
+    mobileCoordinatesButton.setAttribute("aria-expanded", "false");
+    mobileCoordinatesButton.setAttribute("aria-pressed", "false");
+    coordinatesInput.readOnly = false;
+    coordinatesInput.removeAttribute("inputmode");
+    const editor = coordinatesInput.closest(".coordinate-editor");
+    if (editor) {
+      editor.classList.remove("has-mobile-cursor");
+    }
+  }
+
+  function toggleMobileCoordinatesPanel() {
+    if (document.body.classList.contains("is-mobile-coordinates-open")) {
+      closeMobileCoordinatesPanel();
+    } else {
+      openMobileCoordinatesPanel();
+    }
+  }
+
+  function isMobileCoordinatesPanelOpen() {
+    return document.body.classList.contains("is-mobile-coordinates-open");
+  }
+
+  function getCoordinateMeasureElement() {
+    if (coordinateMeasureElement) return coordinateMeasureElement;
+
+    coordinateMeasureElement = document.createElement("span");
+    coordinateMeasureElement.className = "coordinate-measure";
+    document.body.appendChild(coordinateMeasureElement);
+    return coordinateMeasureElement;
+  }
+
+  function measureCoordinateText(text) {
+    const measureElement = getCoordinateMeasureElement();
+    const inputStyle = window.getComputedStyle(coordinatesInput);
+    measureElement.style.font = inputStyle.font;
+    measureElement.style.letterSpacing = inputStyle.letterSpacing;
+    measureElement.textContent = text || "";
+    return measureElement.getBoundingClientRect().width;
+  }
+
+  function updateMobileCoordinateCursorVisual() {
+    const editor = coordinatesInput.closest(".coordinate-editor");
+    if (!editor) return;
+
+    editor.classList.toggle("has-mobile-cursor", isMobileCoordinatesPanelOpen());
+    if (!isMobileCoordinatesPanelOpen()) return;
+
+    const cursorX = measureCoordinateText(
+      coordinatesInput.value.slice(0, mobileCoordinateCursor)
+    );
+    editor.style.setProperty("--coordinate-cursor-x", `${cursorX}px`);
+  }
+
+  function setCoordinateInputSelection(position) {
+    mobileCoordinateCursor = Math.max(0, Math.min(position, coordinatesInput.value.length));
+    updateMobileCoordinateCursorVisual();
+    requestAnimationFrame(() => {
+      try {
+        coordinatesInput.setSelectionRange(mobileCoordinateCursor, mobileCoordinateCursor);
+      } catch (error) {
+        // Selection is best effort for mobile read-only custom keypad entry.
+      }
+      updateMobileCoordinateCursorVisual();
+    });
+  }
+
+  function getMobileCursorPositionFromClientX(clientX) {
+    const inputRect = coordinatesInput.getBoundingClientRect();
+    const inputStyle = window.getComputedStyle(coordinatesInput);
+    const paddingLeft = parseFloat(inputStyle.paddingLeft) || 0;
+    const targetX = Math.max(0, clientX - inputRect.left - paddingLeft);
+    const value = coordinatesInput.value;
+    let bestIndex = value.length;
+    let bestDistance = Infinity;
+
+    for (let index = 0; index <= value.length; index += 1) {
+      const width = measureCoordinateText(value.slice(0, index));
+      const distance = Math.abs(width - targetX);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    }
+
+    return bestIndex;
+  }
+
+  function getCoordinateInsertionRange() {
+    const fallback = coordinatesInput.value.length;
+    if (isMobileCoordinatesPanelOpen() && document.activeElement !== coordinatesInput) {
+      return {
+        end: mobileCoordinateCursor,
+        start: mobileCoordinateCursor,
+      };
+    }
+
+    const start =
+      Number.isInteger(coordinatesInput.selectionStart) && coordinatesInput.selectionStart >= 0
+        ? coordinatesInput.selectionStart
+        : fallback;
+    const end =
+      Number.isInteger(coordinatesInput.selectionEnd) && coordinatesInput.selectionEnd >= 0
+        ? coordinatesInput.selectionEnd
+        : start;
+    return { end, start };
+  }
+
+  function applyCoordinateKey(key) {
+    const value = coordinatesInput.value;
+    const { end, start } = getCoordinateInsertionRange();
+    let nextValue = value;
+    let nextSelection = start;
+
+    if (key === "backspace") {
+      if (start !== end) {
+        nextValue = value.slice(0, start) + value.slice(end);
+        nextSelection = start;
+      } else if (start > 0) {
+        nextValue = value.slice(0, start - 1) + value.slice(start);
+        nextSelection = start - 1;
+      }
+    } else {
+      nextValue = value.slice(0, start) + key + value.slice(end);
+      nextSelection = start + key.length;
+    }
+
+    coordinatesInput.value = nextValue;
+    mobileCoordinateCursor = nextSelection;
+    applyCoordinateEntry(nextValue, {
+      recordHistory: true,
+      source: "typed",
+      track: true,
+    });
+    setCoordinateInputSelection(nextSelection);
+  }
+
+  function closeGuidePanel() {
+    if (!guidePanel || !mobileGuideButton) return;
+    guidePanel.classList.remove("is-open");
+    document.body.classList.remove("is-guide-panel-open");
+    mobileGuideButton.setAttribute("aria-expanded", "false");
+  }
+
+  function setMobileToolsButtonLabel(label) {
+    if (!mobileToolsButton) return;
+    const labelElement = mobileToolsButton.querySelector("span:last-child");
+    if (labelElement) {
+      labelElement.textContent = label;
+    }
+  }
+
+  function openMobileToolsPanel() {
+    if (!mobileToolsButton) return;
+    closeMobileCoordinatesPanel();
+    closeGuidePanel();
+    document.body.classList.add("is-mobile-tools-open");
+    mobileToolsButton.setAttribute("aria-expanded", "true");
+    setMobileToolsButtonLabel("Done");
+    zoneThemeButton.focus();
+    trackToolUse("mobile_tools_panel", { action: "open" });
+  }
+
+  function closeMobileToolsPanel() {
+    if (!mobileToolsButton) return;
+    document.body.classList.remove("is-mobile-tools-open");
+    mobileToolsButton.setAttribute("aria-expanded", "false");
+    setMobileToolsButtonLabel("Tools");
+  }
+
+  function toggleMobileToolsPanel() {
+    if (
+      document.body.classList.contains("is-mobile-tools-open") &&
+      capturePickerModal.classList.contains("is-active")
+    ) {
+      closeModal(capturePickerModal);
+      return;
+    }
+
+    if (document.body.classList.contains("is-mobile-tools-open")) {
+      closeMobileToolsPanel();
+    } else {
+      openMobileToolsPanel();
+    }
   }
 
   function dismissHelpGuideForever() {
@@ -959,6 +1703,7 @@ export function startApp() {
 
   function bindCanvasEvents() {
     canvas.addEventListener("click", function (event) {
+      closeMobileCoordinatesPanel();
       if (!imageLoaded) return;
 
       if (suppressNextClick) {
@@ -1013,36 +1758,28 @@ export function startApp() {
 
     canvas.addEventListener("contextmenu", function (event) {
       event.preventDefault();
+      closeMobileCoordinatesPanel();
       if (!imageLoaded) return;
 
       const point = getCanvasPoint(event);
 
-      if (!newLine && isNearStart(point)) {
+      const dotIndex = getExistingDotIndex(point);
+      if (dotIndex !== -1) {
         history.commit();
-        newLine = true;
-        draw();
-        trackPointEdit("zone_reopen");
-        setStatus("Zone reopened. You can add or remove points.", "info");
-        return;
-      }
-
-      const previousLength = dots.length;
-      const candidateDots = dots.filter(
-        (dot) => getDistance(dot, point) > DOT_RADIUS + 5
-      );
-
-      if (candidateDots.length !== previousLength) {
-        history.commit();
-        dots = candidateDots;
+        dots = dots.filter((dot, index) => index !== dotIndex);
         newLine = true;
         draw();
         printCoordinates();
         trackPointEdit("point_remove");
         handlePointCountStatus();
+        return;
       }
+
+      insertPointOnLine(point);
     });
 
     canvas.addEventListener("pointerdown", function (event) {
+      closeMobileCoordinatesPanel();
       if (!imageLoaded || event.button !== 0) return;
 
       const point = getCanvasPoint(event);
@@ -1088,6 +1825,16 @@ export function startApp() {
       const candidateDots = dots.map((dot, index) =>
         index === dragState.dotIndex ? nextPoint : dot
       );
+
+      if (canJoinEndToStart(nextPoint)) {
+        dots = candidateDots;
+        draw(null, {
+          snapPreviewPoint: dots[0],
+        });
+        setStatus("Release to join the endpoint to the start point.", "info");
+        return;
+      }
+
       const validation = validatePointMove(candidateDots);
 
       if (!validation.valid) {
@@ -1122,6 +1869,22 @@ export function startApp() {
       suppressNextClick = dragState.moved || dragState.dotIndex !== 0 || !newLine;
 
       if (dragState.moved) {
+        const releasePoint = getPlacementPoint(event);
+        if (canJoinEndToStart(releasePoint)) {
+          const didClose = closeZoneFromDraggedEndpoint();
+          if (didClose) {
+            history.recordFrom(dragState.historyState);
+            dragState = null;
+            return;
+          }
+          dots = clonePoints(dragState.historyState.dots);
+          newLine = dragState.historyState.newLine;
+          printCoordinates();
+          draw();
+          dragState = null;
+          return;
+        }
+
         history.recordFrom(dragState.historyState);
         trackPointEdit("point_move");
         handlePointCountStatus();
@@ -1183,6 +1946,11 @@ export function startApp() {
     clearImageButton.addEventListener("click", clearUploadedImage);
 
     coordinatesInput.addEventListener("input", function (event) {
+      mobileCoordinateCursor =
+        Number.isInteger(event.target.selectionStart) && event.target.selectionStart >= 0
+          ? event.target.selectionStart
+          : event.target.value.length;
+      updateMobileCoordinateCursorVisual();
       applyCoordinateEntry(event.target.value, {
         recordHistory: true,
         source: "typed",
@@ -1192,6 +1960,22 @@ export function startApp() {
 
     coordinatesInput.addEventListener("scroll", function () {
       syncCoordinateHighlightScroll(coordinatesInput, coordinateHighlights);
+    });
+
+    coordinatesInput.addEventListener("pointerdown", function (event) {
+      if (!isMobileCoordinatesPanelOpen()) return;
+      event.preventDefault();
+      setCoordinateInputSelection(getMobileCursorPositionFromClientX(event.clientX));
+    });
+
+    coordinateKeypadButtons.forEach((button) => {
+      button.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+      });
+
+      button.addEventListener("click", function () {
+        applyCoordinateKey(button.dataset.coordinateKey);
+      });
     });
 
     window.addEventListener("hashchange", function () {
@@ -1236,10 +2020,20 @@ export function startApp() {
       trackToolUse("shape_picker");
     });
 
+    captureCanvasButton.addEventListener("click", function () {
+      openModal(capturePickerModal);
+      trackToolUse("capture_picker");
+    });
+
+    captureFullCanvasButton.addEventListener("click", captureFullCanvasPng);
+    captureOverlayCanvasButton.addEventListener("click", captureOverlayPng);
+
     shapeOptionButtons.forEach((button) => {
       button.addEventListener("click", function () {
         setShapeTool(button.dataset.shape);
         closeModal(shapePickerModal);
+        closeMobileCoordinatesPanel();
+        closeMobileToolsPanel();
         trackToolUse("shape_select", { shapeName: getShapeLabel(selectedShape) });
         setStatus(
           `${getShapeLabel(selectedShape)} tool selected. Drag on the editor to place it.`,
@@ -1249,9 +2043,19 @@ export function startApp() {
       });
     });
 
+    function closeClickedModal(event) {
+      const modal = event.currentTarget.closest(".modal");
+      if (modal) {
+        closeModal(modal);
+        return;
+      }
+
+      closePickerModals();
+    }
+
     document.querySelectorAll("[data-close-modal], .picker-modal .modal-close").forEach(
       (closeButton) => {
-        closeButton.addEventListener("click", closePickerModals);
+        closeButton.addEventListener("click", closeClickedModal);
       }
     );
 
@@ -1316,6 +2120,18 @@ export function startApp() {
       setStatus(snapToGrid ? "Snap to grid enabled." : "Snap to grid disabled.", "info");
     });
 
+    showCoordinateLabelsInput.addEventListener("change", function (event) {
+      showCoordinateLabels = event.target.checked;
+      draw();
+      trackToolUse("coordinate_labels", { enabled: showCoordinateLabels });
+      setStatus(
+        showCoordinateLabels
+          ? "Coordinate labels enabled."
+          : "Coordinate labels hidden.",
+        "info"
+      );
+    });
+
     lineThicknessInput.addEventListener("input", function (event) {
       lineThickness = parseInt(event.target.value, 10);
       draw();
@@ -1331,6 +2147,19 @@ export function startApp() {
     helpGuideButton.addEventListener("click", function () {
       openHelpGuide("header");
     });
+
+    if (mobileGuideButton) {
+      mobileGuideButton.addEventListener("click", openGuidePanel);
+    }
+    if (mobileCoordinatesButton) {
+      mobileCoordinatesButton.addEventListener("click", toggleMobileCoordinatesPanel);
+    }
+    if (mobileToolsButton) {
+      mobileToolsButton.addEventListener("click", toggleMobileToolsPanel);
+    }
+    if (closeGuidePanelButton) {
+      closeGuidePanelButton.addEventListener("click", closeGuidePanel);
+    }
 
     dismissHelpButton.addEventListener("click", function () {
       trackToolUse("help_dismiss", { action: "got_it" });

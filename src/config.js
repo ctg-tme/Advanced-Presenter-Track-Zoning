@@ -38,39 +38,47 @@ export const RETIRED_HASH_PARAMS = [
 export const ZONE_THEMES = {
   eveningFjord: {
     dot: "#b96f73",
+    grid: "rgb(118, 146, 168)",
     line: "#8aa0ff",
   },
   poppyBreeze: {
     dot: "#ff9a76",
+    grid: "rgb(56, 178, 172)",
     line: "#3bdbe8",
   },
   meadowStone: {
     dot: "#f1c857",
+    grid: "rgb(138, 126, 92)",
     line: "#514c41",
   },
   auroraSlate: {
     dot: "#39d6b2",
+    grid: "rgb(106, 132, 175)",
     line: "#7c5cff",
   },
   deuteranopia: {
     dot: "#e69f00",
+    grid: "rgb(108, 142, 151)",
     line: "#0072b2",
   },
   protanopia: {
     dot: "#d55e00",
+    grid: "rgb(103, 143, 166)",
     line: "#56b4e9",
   },
   tritanopia: {
     dot: "#cc79a7",
+    grid: "rgb(111, 142, 127)",
     line: "#009e73",
   },
   monochrome: {
     dot: "#ffffff",
+    grid: "rgb(148, 163, 184)",
     line: "#111827",
   },
 };
 
-export const DEFAULT_ZONE_THEME = "eveningFjord";
+export const DEFAULT_ZONE_THEME = "poppyBreeze";
 
 export const SIMPLE_SHAPE_LABELS = {
   triangle: "Triangle",

@@ -2,7 +2,7 @@ import {
   CANVAS_BOUNDS_LABEL,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
-} from "./config.js";
+} from "./config.js?v=20260526-xy-status-placement-2";
 import { validateZone } from "./geometry.js";
 
 export function formatCoordinates(points, compact = false) {

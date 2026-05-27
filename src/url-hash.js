@@ -4,7 +4,7 @@ import {
   RETIRED_HASH_PARAMS,
   UNSET_COORDINATES_VALUE,
   XLAUNCH_HASH_PARAM,
-} from "./config.js";
+} from "./config.js?v=20260526-xy-status-placement-2";
 import { formatCoordinates } from "./coordinates.js";
 import { validateZone } from "./geometry.js";
 
