@@ -1,6 +1,6 @@
 # Digital Presenter Track Zone Builder
 
-[![Example Coordinate Capture](/images/ExampleCoordinates.jpg)](#)
+[![Example Coordinate Capture](/images/ExampleCoordinates.png)](#)
 
 The Digital Presenter Track Zone Builder is a static, browser-based tool for
 building custom trigger-zone coordinates for:
